@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ductería — Easy Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#1C7C97;
+    --teal-dark:#155f74;
+    --ink:#2B2E33;
+    --bg:#F6F8F9;
+    --card:#FFFFFF;
+    --border:#E1E6E8;
+    --muted:#6B7580;
+    --danger:#C0392B;
+    --ok:#2E7D32;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Public Sans', sans-serif;
+    display:flex; min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Archivo', sans-serif; margin:0 0 12px;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:220px; background:var(--ink); color:#fff;
+    display:flex; flex-direction:column; flex-shrink:0;
+  }
+  .sidebar .brand{padding:20px 18px; border-bottom:1px solid rgba(255,255,255,.08);}
+  .sidebar .brand strong{font-family:'Archivo',sans-serif; font-size:17px; display:block;}
+  .sidebar .brand span{font-size:12px; color:#b7c0c5;}
+  .sidebar nav{padding:12px 0; flex:1;}
+  .sidebar nav a{
+    display:block; padding:11px 18px; color:#d7dde0; text-decoration:none;
+    font-size:14px; cursor:pointer; border-left:3px solid transparent;
+  }
+  .sidebar nav a:hover{background:rgba(255,255,255,.06);}
+  .sidebar nav a.active{
+    background:rgba(28,124,151,.25); border-left-color:var(--teal); color:#fff; font-weight:600;
+  }
+
+  /* ---------- Main ---------- */
+  .main{flex:1; padding:28px 32px; max-width:1100px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:20px 22px; margin-bottom:20px;
+  }
+  .card h3{font-size:15px; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.04em;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th,td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--border);}
+  th{color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase;}
+  td input{
+    width:100%; border:1px solid var(--border); border-radius:5px; padding:6px 8px;
+    font-family:'IBM Plex Mono', monospace; font-size:13px;
+  }
+  tfoot td{font-weight:700;}
+
+  button{
+    background:var(--teal); color:#fff; border:none; border-radius:7px;
+    padding:9px 16px; font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  button:hover{background:var(--teal-dark);}
+  button:disabled{background:#9fb9c0; cursor:progress; opacity:.85;}
+  button.secondary{background:#fff; color:var(--teal-dark); border:1px solid var(--teal);}
+  button.secondary:hover{background:#eef7f9;}
+  button.secondary:disabled{background:#f2f5f6; color:var(--muted); border-color:var(--border); cursor:progress;}
+  button.danger{background:#fff; color:var(--danger); border:1px solid var(--danger); padding:5px 9px; font-size:12px;}
+  button.danger:disabled{color:var(--muted); border-color:var(--border); cursor:progress;}
+  button.small{padding:5px 10px; font-size:12px;}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .row + .row{margin-top:10px;}
+  input[type=text], input[type=number]{
+    border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:13.5px;
+    font-family:'Public Sans',sans-serif;
+  }
+  .totales{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:14px;}
+  .totales .box{background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px;}
+  .totales .box .label{font-size:11.5px; color:var(--muted); text-transform:uppercase;}
+  .totales .box .value{font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:600; margin-top:4px;}
+  .integracion{border:1px dashed var(--teal); background:#F0F8FA;}
+  .integracion .box{background:#fff;}
+  .badge{display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#e8f4f0; color:var(--ok);}
+  .muted{color:var(--muted); font-size:12.5px;}
+  .status-msg{font-size:13px; margin-top:8px;}
+  .status-msg.ok{color:var(--ok);}
+  .status-msg.err{color:var(--danger);}
+  .hist-actions button{margin-right:6px;}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">
+    <strong>Easy Project</strong>
+    <span>Cotizador de Ductería · P3</span>
+  </div>
+  <nav>
+    <a data-view="nueva" class="active">Nueva cotización</a>
+    <a data-view="catalogo">Catálogo de materiales</a>
+    <a data-view="historial">Historial</a>
+  </nav>
+</div>
+
+<div class="main">
+
+  <!-- ======================= VISTA: NUEVA COTIZACIÓN ======================= -->
+  <div class="view active" id="view-nueva">
+    <h1>Nueva cotización de ductería</h1>
+    <p class="muted">Ingresa los tramos de ducto recto del proyecto (ancho y alto en pulgadas, longitud en metros).</p>
+
+    <div class="card">
+      <h3>Tramos de ducto</h3>
+      <table id="tabla-tramos">
+        <thead>
+          <tr><th>Ancho (pulg)</th><th>Alto (pulg)</th><th>Longitud (m)</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="row" style="margin-top:12px;">
+        <button class="secondary" onclick="agregarTramo()">+ Agregar tramo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Mano de obra de esta cotización</h3>
+      <p class="muted">Estos dos valores son libres — cámbialos para cada cotización según el subcontratista o el proyecto. Vienen precargados como sugerencia desde PARAMETROS, pero no son fijos.</p>
+      <div class="row">
+        <div>
+          <label class="muted" style="display:block;margin-bottom:4px;">Costo por lámina instalada ($)</label>
+          <input type="number" step="0.01" id="input-costo-lamina-subc">
+        </div>
+        <div>
+          <label class="muted" style="display:block;margin-bottom:4px;">% margen sobre el precio de venta</label>
+          <input type="number" step="0.01" id="input-pct-ganancia-mo" placeholder="0.30 = 30% del precio de venta">
+        </div>
+      </div>
+      <p class="muted" style="margin-top:8px;">Ej.: costo $15/lámina con 30% de margen → precio $21.43/lámina (el 30% de ESE precio es ganancia, no 30% sumado al costo).</p>
+    </div>
+
+    <div class="row">
+      <button id="btn-calcular" onclick="calcular()">Calcular</button>
+      <span class="muted" id="calcular-hint">La primera llamada del día puede tardar varios segundos mientras el servicio "despierta" — no hace falta dar clic más de una vez.</span>
+    </div>
+
+    <div id="resultado-wrap" style="display:none;">
+      <div class="card">
+        <h3>Resumen de material</h3>
+        <div class="totales">
+          <div class="box"><div class="label">Total M2</div><div class="value mono" id="r-m2">-</div></div>
+          <div class="box"><div class="label">Total láminas (redondeado)</div><div class="value mono" id="r-laminas">-</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Materiales</h3>
+        <table>
+          <thead><tr><th>Descripción</th><th>Unidad</th><th>Cantidad</th><th>Costo unit.</th><th>Subtotal costo</th><th>Precio de venta</th></tr></thead>
+          <tbody id="tabla-materiales-resultado"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Mano de obra (subcontratista, por lámina)</h3>
+        <div class="totales">
+          <div class="box"><div class="label">Costo mano de obra</div><div class="value mono" id="r-costo-mo">-</div></div>
+          <div class="box"><div class="label">Precio de venta mano de obra</div><div class="value mono" id="r-venta-mo">-</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Totales del proyecto</h3>
+        <div class="totales">
+          <div class="box"><div class="label">Costo total</div><div class="value mono" id="r-costo-total">-</div></div>
+          <div class="box"><div class="label">Precio de venta total</div><div class="value mono" id="r-venta-total">-</div></div>
+          <div class="box"><div class="label">Margen</div><div class="value mono" id="r-margen">-</div></div>
+        </div>
+      </div>
+
+      <div class="card integracion">
+        <h3>Datos para integración <span class="badge">copiar</span></h3>
+        <p class="muted">Para el Cotizador (dos partidas separadas):</p>
+        <div class="totales">
+          <div class="box"><div class="label">Precio de venta — Materiales</div><div class="value mono" id="i-venta-mat">-</div></div>
+          <div class="box"><div class="label">Precio de venta — Mano de obra</div><div class="value mono" id="i-venta-mo">-</div></div>
+        </div>
+        <p class="muted" style="margin-top:14px;">Para Control de Gastos (costo por lámina):</p>
+        <div class="totales">
+          <div class="box"><div class="label">Costo materiales / lámina</div><div class="value mono" id="i-costo-mat-lam">-</div></div>
+          <div class="box"><div class="label">Costo mano de obra / lámina</div><div class="value mono" id="i-costo-mo-lam">-</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Guardar cotización</h3>
+        <div class="row">
+          <input type="text" id="input-nombre-proyecto" placeholder="Nombre del proyecto / cliente" style="min-width:280px;">
+          <button id="btn-guardar" onclick="guardarCotizacion()">Guardar</button>
+          <button class="secondary" id="btn-imprimir-reporte" onclick="imprimirReporte()" disabled>Imprimir reporte de costos (PDF)</button>
+        </div>
+        <div class="status-msg" id="guardar-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= VISTA: CATÁLOGO ======================= -->
+  <div class="view" id="view-catalogo">
+    <h1>Catálogo de materiales</h1>
+    <p class="muted">La cantidad de cada material se calcula como % de la cantidad total de láminas del proyecto. La fila de la lámina misma debe quedar en 100%.</p>
+    <p class="muted">El % de ganancia es margen sobre el precio de venta, no un recargo sobre el costo: con 30% y costo $35, el precio de venta es $50.00 (no $45.50) para que el 30% de ese precio sea ganancia real.</p>
+    <div class="card">
+      <table id="tabla-catalogo">
+        <thead>
+          <tr><th>Descripción</th><th>Unidad</th><th>% consumo vs. láminas</th><th>Costo unitario</th><th>% margen sobre venta (vacío = default)</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="row" style="margin-top:12px;">
+        <button class="secondary" onclick="agregarMaterialCatalogo()">+ Agregar material</button>
+        <button id="btn-guardar-catalogo" onclick="guardarCatalogo()">Guardar catálogo</button>
+      </div>
+      <div class="status-msg" id="catalogo-status"></div>
+    </div>
+  </div>
+
+  <!-- ======================= VISTA: HISTORIAL ======================= -->
+  <div class="view" id="view-historial">
+    <h1>Historial de cotizaciones</h1>
+    <div class="card">
+      <table>
+        <thead><tr><th>Fecha</th><th>Proyecto</th><th>Láminas</th><th>Costo total</th><th>Precio venta total</th><th>Margen</th><th></th></tr></thead>
+        <tbody id="tabla-historial"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN — pega aquí la URL /exec de tu despliegue de
+   Apps Script (Code.gs) una vez publicado como Aplicación Web.
+   ============================================================ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxHTdoHFk7raNfLq1QL7SMUkldKZBuKgqfDDZE5hHnfBG0jNjbQKbFfwI11VB6al-UX/exec';
+const API_TIMEOUT_MS = 30000; // Apps Script puede tardar en "despertar" tras inactividad
+
+let catalogoActual = [];
+let ultimoResultado = null;
+let ultimoIdGuardado = null;
+
+// ---------- navegación ----------
+document.querySelectorAll('.sidebar nav a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar nav a').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    a.classList.add('active');
+    document.getElementById('view-' + a.dataset.view).classList.add('active');
+    if (a.dataset.view === 'catalogo') cargarCatalogoVista();
+    if (a.dataset.view === 'historial') cargarHistorial();
+  });
+});
+
+// ---------- estado de carga de botones (evita clics repetidos mientras se espera la respuesta) ----------
+function setLoading(btn, loadingText) {
+  if (!btn) return function () {};
+  const originalText = btn.textContent;
+  const originalDisabled = btn.disabled;
+  btn.disabled = true;
+  btn.textContent = loadingText;
+  return function restore() {
+    btn.disabled = originalDisabled;
+    btn.textContent = originalText;
+  };
+}
+
+// ---------- llamadas a la API (con timeout: Apps Script puede tardar en "despertar") ----------
+// parseJsonSeguro: Apps Script a veces responde con una página de error en HTML
+// (por ejemplo si se excede el cupo de ejecuciones de Google en un momento dado)
+// en vez de JSON. Si pasa, lanzamos un error claro en vez de dejar que reviente
+// con el típico "Unexpected token '<'... is not valid JSON".
+function parseJsonSeguro(texto) {
+  try {
+    return JSON.parse(texto);
+  } catch (e) {
+    const err = new Error('RESPUESTA_NO_JSON');
+    err.isNotJson = true;
+    err.raw = texto;
+    throw err;
+  }
+}
+function apiGet(action, params) {
+  params = params || {};
+  const qs = new URLSearchParams(Object.assign({ action }, params)).toString();
+  return fetch(API_URL + '?' + qs).then(r => r.text()).then(parseJsonSeguro);
+}
+function apiPost(action, payload) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), API_TIMEOUT_MS);
+  return fetch(API_URL + '?action=' + action, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // evita preflight CORS, igual que las otras apps
+    body: JSON.stringify(payload || {}),
+    signal: ctrl.signal
+  }).then(r => r.text()).then(parseJsonSeguro).finally(() => clearTimeout(timer));
+}
+function mensajeError(err) {
+  if (err && err.name === 'AbortError') {
+    return 'El servicio tardó demasiado en responder (más de ' + (API_TIMEOUT_MS / 1000) + 's). Espera unos segundos y vuelve a intentar — puede que solo estuviera "despertando".';
+  }
+  if (err && err.isNotJson) {
+    return 'Google respondió de forma inesperada (no fue el resultado esperado) — probablemente un límite temporal de llamadas. Espera unos 30-60 segundos y vuelve a intentar.';
+  }
+  return 'Error: ' + (err && err.message ? err.message : err);
+}
+
+function money(n) {
+  n = Number(n) || 0;
+  return 'B/. ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ---------- precargar sugerencias de mano de obra (libres, no fijas) ----------
+apiGet('getInitData').then(res => {
+  const p = res.parametros || {};
+  if (p.COSTO_LAMINA_SUBCONTRATISTA !== undefined) {
+    document.getElementById('input-costo-lamina-subc').value = p.COSTO_LAMINA_SUBCONTRATISTA;
+  }
+  if (p.PCT_GANANCIA_MANO_OBRA !== undefined) {
+    document.getElementById('input-pct-ganancia-mo').value = p.PCT_GANANCIA_MANO_OBRA;
+  }
+}).catch(() => {});
+
+// ---------- tabla de tramos ----------
+function filaTramoHtml() {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="number" step="0.01" class="t-ancho" value="0"></td>
+    <td><input type="number" step="0.01" class="t-alto" value="0"></td>
+    <td><input type="number" step="0.01" class="t-longitud" value="0"></td>
+    <td><button class="danger" onclick="this.closest('tr').remove()">Quitar</button></td>
+  `;
+  return tr;
+}
+function agregarTramo() {
+  document.querySelector('#tabla-tramos tbody').appendChild(filaTramoHtml());
+}
+// arranca con 3 filas vacías
+for (let i = 0; i < 3; i++) agregarTramo();
+
+function leerTramos() {
+  const filas = document.querySelectorAll('#tabla-tramos tbody tr');
+  const tramos = [];
+  filas.forEach(f => {
+    tramos.push({
+      ancho: parseFloat(f.querySelector('.t-ancho').value) || 0,
+      alto: parseFloat(f.querySelector('.t-alto').value) || 0,
+      longitud: parseFloat(f.querySelector('.t-longitud').value) || 0
+    });
+  });
+  return tramos.filter(t => t.ancho || t.alto || t.longitud);
+}
+
+// ---------- valores libres de mano de obra de esta cotización ----------
+function leerOverridesManoObra() {
+  return {
+    costoLaminaSubcontratista: parseFloat(document.getElementById('input-costo-lamina-subc').value),
+    pctGananciaManoObra: parseFloat(document.getElementById('input-pct-ganancia-mo').value)
+  };
+}
+
+// ---------- calcular ----------
+function calcular() {
+  const tramos = leerTramos();
+  if (!tramos.length) { alert('Agrega al menos un tramo con datos.'); return; }
+  const overrides = leerOverridesManoObra();
+  const btn = document.getElementById('btn-calcular');
+  const restore = setLoading(btn, 'Calculando…');
+  apiPost('calcularDucteria', Object.assign({ tramos }, overrides))
+    .then(res => {
+      if (res.error) { alert('Error: ' + res.error); return; }
+      ultimoResultado = res;
+      ultimoIdGuardado = null;
+      document.getElementById('btn-imprimir-reporte').disabled = true;
+      pintarResultado(res);
+    })
+    .catch(err => alert(mensajeError(err)))
+    .finally(restore);
+}
+
+function pintarResultado(res) {
+  document.getElementById('resultado-wrap').style.display = 'block';
+  document.getElementById('r-m2').textContent = res.totalM2.toFixed(2);
+  document.getElementById('r-laminas').textContent = res.totalLaminas;
+
+  const tbody = document.getElementById('tabla-materiales-resultado');
+  tbody.innerHTML = '';
+  res.detalleMateriales.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${m.descripcion}</td><td>${m.unidad}</td><td class="mono">${m.cantidad}</td>
+      <td class="mono">${money(m.costoUnitario)}</td><td class="mono">${money(m.costoSubtotal)}</td>
+      <td class="mono">${money(m.precioVentaSubtotal)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('r-costo-mo').textContent = money(res.costoManoObra);
+  document.getElementById('r-venta-mo').textContent = money(res.precioVentaManoObra);
+
+  document.getElementById('r-costo-total').textContent = money(res.costoTotal);
+  document.getElementById('r-venta-total').textContent = money(res.precioVentaTotal);
+  document.getElementById('r-margen').textContent = money(res.margen) + ' (' + (res.margenPct * 100).toFixed(1) + '%)';
+
+  document.getElementById('i-venta-mat').textContent = money(res.precioVentaMateriales);
+  document.getElementById('i-venta-mo').textContent = money(res.precioVentaManoObra);
+  document.getElementById('i-costo-mat-lam').textContent = money(res.costoMaterialesPorLamina);
+  document.getElementById('i-costo-mo-lam').textContent = money(res.costoManoObraPorLamina);
+
+  document.getElementById('guardar-status').textContent = '';
+}
+
+// ---------- guardar cotización ----------
+function guardarCotizacion() {
+  if (!ultimoResultado) { alert('Primero calcula la cotización.'); return; }
+  const nombreProyecto = document.getElementById('input-nombre-proyecto').value.trim();
+  if (!nombreProyecto) { alert('Ponle un nombre al proyecto/cliente.'); return; }
+  const tramos = leerTramos();
+  const overrides = leerOverridesManoObra();
+  const btn = document.getElementById('btn-guardar');
+  const restore = setLoading(btn, 'Guardando…');
+  apiPost('guardarCotizacionDucteria', Object.assign({ nombreProyecto, tramos }, overrides))
+    .then(res => {
+      const el = document.getElementById('guardar-status');
+      if (res.error) { el.textContent = 'Error: ' + res.error; el.className = 'status-msg err'; return; }
+      ultimoIdGuardado = res.id;
+      document.getElementById('btn-imprimir-reporte').disabled = false;
+      el.textContent = 'Cotización guardada correctamente.';
+      el.className = 'status-msg ok';
+    })
+    .catch(err => {
+      const el = document.getElementById('guardar-status');
+      el.textContent = mensajeError(err);
+      el.className = 'status-msg err';
+    })
+    .finally(restore);
+}
+
+function imprimirReporte() {
+  if (!ultimoIdGuardado) { alert('Primero guarda la cotización.'); return; }
+  const btn = document.getElementById('btn-imprimir-reporte');
+  const restore = setLoading(btn, 'Generando PDF…');
+  apiPost('exportarReporteCostosPdf', { id: ultimoIdGuardado })
+    .then(res => {
+      if (res.error) { alert('Error generando el PDF: ' + res.error); return; }
+      const link = document.createElement('a');
+      link.href = 'data:application/pdf;base64,' + res.base64;
+      link.download = res.nombreArchivo || 'reporte-costos-ducteria.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    })
+    .catch(err => alert(mensajeError(err)))
+    .finally(restore);
+}
+
+// ---------- catálogo ----------
+function filaCatalogoHtml(m) {
+  m = m || { id: '', descripcion: '', unidad: 'UND', pctConsumoVsLaminas: '', costoUnitario: '', pctGanancia: '' };
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="c-desc" value="${m.descripcion || ''}"></td>
+    <td><input type="text" class="c-unidad" value="${m.unidad || 'UND'}" style="width:70px;"></td>
+    <td><input type="number" step="0.01" class="c-pct" value="${m.pctConsumoVsLaminas ?? ''}"></td>
+    <td><input type="number" step="0.01" class="c-costo" value="${m.costoUnitario ?? ''}"></td>
+    <td><input type="number" step="0.01" class="c-ganancia" value="${m.pctGanancia ?? ''}" placeholder="default"></td>
+    <td><button class="danger" onclick="this.closest('tr').remove()">Quitar</button></td>
+  `;
+  tr.dataset.id = m.id || '';
+  return tr;
+}
+function agregarMaterialCatalogo() {
+  document.querySelector('#tabla-catalogo tbody').appendChild(filaCatalogoHtml());
+}
+function cargarCatalogoVista() {
+  apiGet('getInitData').then(res => {
+    catalogoActual = res.catalogoMateriales || [];
+    const tbody = document.querySelector('#tabla-catalogo tbody');
+    tbody.innerHTML = '';
+    catalogoActual.forEach(m => tbody.appendChild(filaCatalogoHtml(m)));
+  }).catch(err => alert(mensajeError(err)));
+}
+function guardarCatalogo() {
+  const filas = document.querySelectorAll('#tabla-catalogo tbody tr');
+  const materiales = [];
+  filas.forEach((f, idx) => {
+    materiales.push({
+      id: f.dataset.id || (idx + 1),
+      descripcion: f.querySelector('.c-desc').value,
+      unidad: f.querySelector('.c-unidad').value,
+      pctConsumoVsLaminas: parseFloat(f.querySelector('.c-pct').value) || 0,
+      costoUnitario: parseFloat(f.querySelector('.c-costo').value) || 0,
+      pctGanancia: f.querySelector('.c-ganancia').value === '' ? '' : parseFloat(f.querySelector('.c-ganancia').value)
+    });
+  });
+  const btn = document.getElementById('btn-guardar-catalogo');
+  const restore = setLoading(btn, 'Guardando…');
+  apiPost('guardarCatalogoMateriales', { materiales })
+    .then(res => {
+      const el = document.getElementById('catalogo-status');
+      if (res.error) { el.textContent = 'Error: ' + res.error; el.className = 'status-msg err'; return; }
+      el.textContent = 'Catálogo guardado.';
+      el.className = 'status-msg ok';
+    })
+    .catch(err => {
+      const el = document.getElementById('catalogo-status');
+      el.textContent = mensajeError(err);
+      el.className = 'status-msg err';
+    })
+    .finally(restore);
+}
+
+// ---------- historial ----------
+function cargarHistorial() {
+  apiGet('listarCotizacionesDucteria').then(res => {
+    const tbody = document.getElementById('tabla-historial');
+    tbody.innerHTML = '';
+    (res.lista || []).forEach(c => {
+      const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString('es-PA') : '-';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${fecha}</td><td>${c.nombreProyecto}</td><td class="mono">${c.totalLaminas}</td>
+        <td class="mono">${money(c.costoTotal)}</td><td class="mono">${money(c.precioVentaTotal)}</td>
+        <td class="mono">${(c.margenPct * 100).toFixed(1)}%</td>
+        <td class="hist-actions">
+          <button class="secondary small" onclick="imprimirDesdeHistorial('${c.id}', this)">PDF</button>
+          <button class="danger" onclick="eliminarDesdeHistorial('${c.id}', this)">Eliminar</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }).catch(err => alert(mensajeError(err)));
+}
+function imprimirDesdeHistorial(id, btn) {
+  const restore = setLoading(btn, '...');
+  apiPost('exportarReporteCostosPdf', { id })
+    .then(res => {
+      if (res.error) { alert('Error generando el PDF: ' + res.error); return; }
+      const link = document.createElement('a');
+      link.href = 'data:application/pdf;base64,' + res.base64;
+      link.download = res.nombreArchivo || 'reporte-costos-ducteria.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    })
+    .catch(err => alert(mensajeError(err)))
+    .finally(restore);
+}
+function eliminarDesdeHistorial(id, btn) {
+  if (!confirm('¿Eliminar esta cotización del historial?')) return;
+  const restore = setLoading(btn, '...');
+  apiPost('eliminarCotizacionDucteria', { id })
+    .then(() => cargarHistorial())
+    .catch(err => { alert(mensajeError(err)); restore(); });
+}
+</script>
+</body>
+</html>
