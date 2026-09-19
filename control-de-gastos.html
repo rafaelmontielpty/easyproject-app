@@ -22,7 +22,7 @@
   html,body{margin:0;padding:0;}
   body{background:var(--ink);font-family:'Inter',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
   .shell{
-    max-width:520px;margin:0 auto;background:var(--paper);min-height:100vh;position:relative;
+    max-width:1200px;margin:0 auto;background:var(--paper);min-height:100vh;position:relative;
     display:flex;flex-direction:column;
     background-image:linear-gradient(var(--line) 1px, transparent 1px),linear-gradient(90deg, var(--line) 1px, transparent 1px);
     background-size:24px 24px;background-position:-1px -1px;
@@ -77,8 +77,25 @@
   .sem-verde{background:var(--verde);} .sem-amarillo{background:var(--amarillo);} .sem-rojo{background:var(--rojo);}
   .pct-badge{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;}
   .empty-note{color:var(--steel-soft);font-size:12.5px;text-align:center;padding:10px 0;}
+
+  /* ---- Dashboard corporativo (desktop) ---- */
+  .dash-hero{background:var(--ink);color:#fff;border-radius:var(--radius);padding:24px 28px;margin-bottom:16px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+  .dash-hero .section-title{color:#c7d0d6;margin-bottom:4px;}
+  .dash-hero .section-title .tag{background:rgba(255,255,255,.12);color:#dff0f6;}
+  .dash-hero .gauge-wrap{padding:0;flex:0 0 auto;}
+  .dash-hero .gauge-figure{max-width:210px;}
+  .dash-hero .gauge-readout{color:#fff;}
+  .dash-hero .gauge-label{color:#aebac1;}
+  .dash-hero .gauge-legend{color:#aebac1;}
+  .dash-hero-stats{display:flex;gap:28px;flex-wrap:wrap;flex:1;min-width:240px;}
+  .dash-hero-stat .hs-label{font-size:11px;color:#9fb0b8;text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .dash-hero-stat .hs-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:24px;color:#fff;margin-top:4px;}
+  .dash-hero-stat .hs-value.pos{color:#7fe0a0;}
+  .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:16px;}
+  .dash-grid .card{margin-bottom:0;height:100%;}
+  .dash-grid-full{grid-column:1 / -1;}
   nav.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid #223349;display:flex;justify-content:center;z-index:30;}
-  .tabbar-inner{max-width:520px;width:100%;display:flex;}
+  .tabbar-inner{max-width:1200px;width:100%;display:flex;}
   .tab-btn{flex:1;background:none;border:none;color:#7C8CA0;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Inter',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;letter-spacing:.01em;}
   .tab-btn svg{width:19px;height:19px;}
   .tab-btn.active{color:#fff;}
@@ -140,7 +157,7 @@
   .pt-figures{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--steel);font-family:'IBM Plex Mono',monospace;}
   .overlay{position:fixed;inset:0;background:rgba(15,27,45,.55);z-index:40;display:none;align-items:flex-end;justify-content:center;}
   .overlay.open{display:flex;}
-  .sheet{background:#fff;max-width:520px;width:100%;border-radius:18px 18px 0 0;padding:20px 20px 26px;max-height:82vh;overflow-y:auto;}
+  .sheet{background:#fff;max-width:640px;width:100%;border-radius:18px 18px 0 0;padding:20px 20px 26px;max-height:82vh;overflow-y:auto;}
   .sheet h3{font-family:'Space Grotesk',sans-serif;margin:0 0 12px;font-size:17px;}
   .sheet p, .sheet li{font-size:13.5px;line-height:1.55;color:var(--steel);}
   .sheet ul{padding-left:18px;}
@@ -973,100 +990,107 @@ function gaugeSvg(pct){
 function renderDashboard(){
   const isAll = currentProyecto === "ALL";
   const d = isAll ? computeDashboardAll() : computeDashboard(currentProyecto);
+  const disponible = d.sumPresup - d.costoTotalReal;
   return `
-    <div class="card">
-      <div class="list-head" style="margin-bottom:0;"><div></div>
-        <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
-      </div>
-      <div class="section-title">Presupuesto consumido <span class="tag">${isAll?'TODOS LOS PROYECTOS':'GLOBAL'}</span></div>
-      <div class="gauge-wrap">
-        ${gaugeSvg(d.pctGlobal)}
-        <div class="gauge-readout">${fmtPct(d.pctGlobal)}</div>
-        <div class="gauge-label">${fmtMoney(d.costoTotalReal)} de ${fmtMoney(d.sumPresup)} presupuestados</div>
-        <div class="gauge-legend">
-          <span><i class="dot" style="background:var(--verde)"></i>&lt;70%</span>
-          <span><i class="dot" style="background:var(--amarillo)"></i>70–90%</span>
-          <span><i class="dot" style="background:var(--rojo)"></i>&gt;90%</span>
+    <div class="dash-hero">
+      <div>
+        <div class="section-title">Presupuesto consumido <span class="tag">${isAll?'TODOS LOS PROYECTOS':'GLOBAL'}</span></div>
+        <div class="gauge-wrap">
+          ${gaugeSvg(d.pctGlobal)}
+          <div class="gauge-readout">${fmtPct(d.pctGlobal)}</div>
+          <div class="gauge-legend">
+            <span><i class="dot" style="background:var(--verde)"></i>&lt;70%</span>
+            <span><i class="dot" style="background:var(--amarillo)"></i>70–90%</span>
+            <span><i class="dot" style="background:var(--rojo)"></i>&gt;90%</span>
+          </div>
         </div>
       </div>
+      <div class="dash-hero-stats">
+        <div class="dash-hero-stat"><div class="hs-label">Presupuestado</div><div class="hs-value">${fmtMoney(d.sumPresup)}</div></div>
+        <div class="dash-hero-stat"><div class="hs-label">Gastado</div><div class="hs-value">${fmtMoney(d.costoTotalReal)}</div></div>
+        <div class="dash-hero-stat"><div class="hs-label">Disponible</div><div class="hs-value ${disponible>=0?'pos':''}">${fmtMoney(disponible)}</div></div>
+        <div class="dash-hero-stat"><button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar" style="border-color:rgba(255,255,255,.25);color:#fff;">↻</button></div>
+      </div>
     </div>
 
-    ${isAll ? `
-    <div class="card">
-      <div class="section-title">Pipeline de cotizaciones <span class="tag">DESDE EL COTIZADOR</span></div>
-      <div class="kpi-grid">
-        <div class="kpi accent"><div class="k-label">Valor en pipeline, sin ITBMS (Borrador + Enviada)</div><div class="k-value">${fmtMoney(d.pipeline.total)}</div></div>
-        <div class="kpi"><div class="k-label"># Cotizaciones abiertas</div><div class="k-value">${d.pipeline.count}</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="list-head" style="margin-bottom:6px;">
-        <div class="section-title" style="margin-bottom:0;">Control de ITBMS <span class="tag">ESTIMADO</span></div>
-        <input type="month" value="${itbmsMes}" onchange="cambiarMesItbms(this.value)" style="border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:'Inter',sans-serif;font-size:12.5px;">
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi pos"><div class="k-label">ITBMS cobrado (ventas)</div><div class="k-value">${fmtMoney(d.itbms.cobrado)}</div></div>
-        <div class="kpi neg"><div class="k-label">ITBMS pagado (compras/M.O./extras/generales)</div><div class="k-value">${fmtMoney(d.itbms.pagado)}</div></div>
-        <div class="kpi ${d.itbms.diferencia>=0?'accent':'pos'}" style="grid-column:1 / -1;">
-          <div class="k-label">${d.itbms.diferencia>=0 ? 'Posible aporte a DGI este mes' : 'Crédito fiscal a favor este mes'}</div>
-          <div class="k-value">${fmtMoney(Math.abs(d.itbms.diferencia))}</div>
+    <div class="dash-grid">
+      ${isAll ? `
+      <div class="card">
+        <div class="section-title">Pipeline de cotizaciones <span class="tag">DESDE EL COTIZADOR</span></div>
+        <div class="kpi-grid">
+          <div class="kpi accent"><div class="k-label">Valor en pipeline, sin ITBMS (Borrador + Enviada)</div><div class="k-value">${fmtMoney(d.pipeline.total)}</div></div>
+          <div class="kpi"><div class="k-label"># Cotizaciones abiertas</div><div class="k-value">${d.pipeline.count}</div></div>
         </div>
       </div>
-      <div class="footnote" style="text-align:left;margin-top:8px;">Estimación de gestión según fecha de emisión de cada factura y de registro de cada gasto — concilia con tu contador antes de declarar. Cobrado: ${d.itbms.conteos.nFacturas} factura(s) emitida(s) + ${d.itbms.conteos.nExtrasCobrado} extra(s). Pagado: ${d.itbms.conteos.nCompras} compra(s), ${d.itbms.conteos.nMano} M.O. subcontratada, ${d.itbms.conteos.nExtrasPagado} extra(s), ${d.itbms.conteos.nGenerales} general(es).</div>
-    </div>
-    <div class="card">
-      <div class="section-title">Cuentas por Cobrar y por Pagar <span class="tag">TODOS LOS PROYECTOS</span></div>
-      <div class="kpi-grid">
-        <div class="kpi pos"><div class="k-label">Por cobrar (saldo)</div><div class="k-value">${fmtMoney(d.cxc.saldo)}</div></div>
-        <div class="kpi neg"><div class="k-label">Por pagar (saldo)</div><div class="k-value">${fmtMoney(d.cxp.saldo)}</div></div>
-      </div>
-      <div class="footnote" style="text-align:left;margin-top:8px;">Facturado a clientes: ${fmtMoney(d.cxc.totalFacturado)} · Cobrado: ${fmtMoney(d.cxc.totalCobrado)}. Facturado por proveedores: ${fmtMoney(d.cxp.totalFacturas)} · Pagado: ${fmtMoney(d.cxp.totalAbonado)}. Detalle por proyecto en la pestaña "Facturación".</div>
-    </div>` : ''}
-
-    <div class="card">
-      <div class="section-title">Rentabilidad del proyecto</div>
-      <div class="kpi-grid">
-        <div class="kpi accent"><div class="k-label">Venta total</div><div class="k-value">${fmtMoney(d.ventaTotal)}</div></div>
-        <div class="kpi"><div class="k-label">Costo real</div><div class="k-value">${fmtMoney(d.costoTotalReal)}</div></div>
-        <div class="kpi ${d.rentabilidadTotal>=0?'pos':'neg'}"><div class="k-label">Rentabilidad</div><div class="k-value">${fmtMoney(d.rentabilidadTotal)}</div></div>
-        <div class="kpi ${d.rentabilidadTotal>=0?'pos':'neg'}"><div class="k-label">% Rentabilidad</div><div class="k-value">${fmtPct(d.pctRentabilidadTotal)}</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Ajustado con gastos generales</div>
-      <div class="kpi-grid">
-        <div class="kpi"><div class="k-label">Gastos generales</div><div class="k-value">${fmtMoney(d.genTotal)}</div></div>
-        <div class="kpi ${d.rentabilidadAjustada>=0?'pos':'neg'}"><div class="k-label">Rentab. ajustada</div><div class="k-value">${fmtMoney(d.rentabilidadAjustada)}</div></div>
-        <div class="kpi ${d.rentabilidadAjustada>=0?'pos':'neg'}"><div class="k-label">% ajustado</div><div class="k-value">${fmtPct(d.pctRentabilidadAjustada)}</div></div>
-        <div class="kpi"><div class="k-label">M. de obra registrada</div><div class="k-value">${fmtMoney(d.manoTotal)}</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Pagos y extras</div>
-      <div class="kpi-grid">
-        <div class="kpi neg"><div class="k-label">Pendiente de pago</div><div class="k-value">${fmtMoney(d.pendienteTotal)}</div></div>
-        <div class="kpi"><div class="k-label">Venta extras aprob.</div><div class="k-value">${fmtMoney(d.ventaExtras)}</div></div>
-        <div class="kpi ${d.rentabilidadExtras>=0?'pos':'neg'}"><div class="k-label">Rentab. extras</div><div class="k-value">${fmtMoney(d.rentabilidadExtras)}</div></div>
-        <div class="kpi"><div class="k-label">Partidas en riesgo</div><div class="k-value">${d.riesgo.length}</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Partidas amarillas y rojas <span class="tag">${d.riesgo.length}</span></div>
-      ${d.riesgo.length===0 ? '<div class="empty-note">Ninguna partida supera el 70% de consumo. Todo en verde.</div>' :
-        d.riesgo.map(p=>`
-        <div class="risk-row">
-          <div>
-            <div class="risk-id">${p.id} ${isAll?`<span class="proyecto-tag">${escapeHtml(p.proyectoNombre||p.proyectoKey)}</span>`:''}</div>
-            <div class="risk-cat">${escapeHtml(CATEGORIA_LABELS[p.categoria]||p.categoria)}</div>
+      <div class="card">
+        <div class="list-head" style="margin-bottom:6px;">
+          <div class="section-title" style="margin-bottom:0;">Control de ITBMS <span class="tag">ESTIMADO</span></div>
+          <input type="month" value="${itbmsMes}" onchange="cambiarMesItbms(this.value)" style="border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:'Inter',sans-serif;font-size:12.5px;">
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi pos"><div class="k-label">ITBMS cobrado (ventas)</div><div class="k-value">${fmtMoney(d.itbms.cobrado)}</div></div>
+          <div class="kpi neg"><div class="k-label">ITBMS pagado (compras/M.O./extras/generales)</div><div class="k-value">${fmtMoney(d.itbms.pagado)}</div></div>
+          <div class="kpi ${d.itbms.diferencia>=0?'accent':'pos'}" style="grid-column:1 / -1;">
+            <div class="k-label">${d.itbms.diferencia>=0 ? 'Posible aporte a DGI este mes' : 'Crédito fiscal a favor este mes'}</div>
+            <div class="k-value">${fmtMoney(Math.abs(d.itbms.diferencia))}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="pct-badge" style="background:var(--${p.semaforo==='rojo'?'rojo':'amarillo'}-soft);color:var(--${p.semaforo==='rojo'?'rojo':'amarillo'});">${fmtPct(p.pct)}</span>
-            <span class="semaforo sem-${p.semaforo}"></span>
-          </div>
-        </div>`).join("")}
+        </div>
+        <div class="footnote" style="text-align:left;margin-top:8px;">Estimación de gestión según fecha de emisión de cada factura y de registro de cada gasto — concilia con tu contador antes de declarar. Cobrado: ${d.itbms.conteos.nFacturas} factura(s) emitida(s) + ${d.itbms.conteos.nExtrasCobrado} extra(s). Pagado: ${d.itbms.conteos.nCompras} compra(s), ${d.itbms.conteos.nMano} M.O. subcontratada, ${d.itbms.conteos.nExtrasPagado} extra(s), ${d.itbms.conteos.nGenerales} general(es).</div>
+      </div>
+      <div class="card">
+        <div class="section-title">Cuentas por Cobrar y por Pagar <span class="tag">TODOS LOS PROYECTOS</span></div>
+        <div class="kpi-grid">
+          <div class="kpi pos"><div class="k-label">Por cobrar (saldo)</div><div class="k-value">${fmtMoney(d.cxc.saldo)}</div></div>
+          <div class="kpi neg"><div class="k-label">Por pagar (saldo)</div><div class="k-value">${fmtMoney(d.cxp.saldo)}</div></div>
+        </div>
+        <div class="footnote" style="text-align:left;margin-top:8px;">Facturado a clientes: ${fmtMoney(d.cxc.totalFacturado)} · Cobrado: ${fmtMoney(d.cxc.totalCobrado)}. Facturado por proveedores: ${fmtMoney(d.cxp.totalFacturas)} · Pagado: ${fmtMoney(d.cxp.totalAbonado)}. Detalle por proyecto en la pestaña "Facturación".</div>
+      </div>` : ''}
+
+      <div class="card">
+        <div class="section-title">Rentabilidad del proyecto</div>
+        <div class="kpi-grid">
+          <div class="kpi accent"><div class="k-label">Venta total</div><div class="k-value">${fmtMoney(d.ventaTotal)}</div></div>
+          <div class="kpi"><div class="k-label">Costo real</div><div class="k-value">${fmtMoney(d.costoTotalReal)}</div></div>
+          <div class="kpi ${d.rentabilidadTotal>=0?'pos':'neg'}"><div class="k-label">Rentabilidad</div><div class="k-value">${fmtMoney(d.rentabilidadTotal)}</div></div>
+          <div class="kpi ${d.rentabilidadTotal>=0?'pos':'neg'}"><div class="k-label">% Rentabilidad</div><div class="k-value">${fmtPct(d.pctRentabilidadTotal)}</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Ajustado con gastos generales</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="k-label">Gastos generales</div><div class="k-value">${fmtMoney(d.genTotal)}</div></div>
+          <div class="kpi ${d.rentabilidadAjustada>=0?'pos':'neg'}"><div class="k-label">Rentab. ajustada</div><div class="k-value">${fmtMoney(d.rentabilidadAjustada)}</div></div>
+          <div class="kpi ${d.rentabilidadAjustada>=0?'pos':'neg'}"><div class="k-label">% ajustado</div><div class="k-value">${fmtPct(d.pctRentabilidadAjustada)}</div></div>
+          <div class="kpi"><div class="k-label">M. de obra registrada</div><div class="k-value">${fmtMoney(d.manoTotal)}</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Pagos y extras</div>
+        <div class="kpi-grid">
+          <div class="kpi neg"><div class="k-label">Pendiente de pago</div><div class="k-value">${fmtMoney(d.pendienteTotal)}</div></div>
+          <div class="kpi"><div class="k-label">Venta extras aprob.</div><div class="k-value">${fmtMoney(d.ventaExtras)}</div></div>
+          <div class="kpi ${d.rentabilidadExtras>=0?'pos':'neg'}"><div class="k-label">Rentab. extras</div><div class="k-value">${fmtMoney(d.rentabilidadExtras)}</div></div>
+          <div class="kpi"><div class="k-label">Partidas en riesgo</div><div class="k-value">${d.riesgo.length}</div></div>
+        </div>
+      </div>
+
+      <div class="card dash-grid-full">
+        <div class="section-title">Partidas amarillas y rojas <span class="tag">${d.riesgo.length}</span></div>
+        ${d.riesgo.length===0 ? '<div class="empty-note">Ninguna partida supera el 70% de consumo. Todo en verde.</div>' :
+          d.riesgo.map(p=>`
+          <div class="risk-row">
+            <div>
+              <div class="risk-id">${p.id} ${isAll?`<span class="proyecto-tag">${escapeHtml(p.proyectoNombre||p.proyectoKey)}</span>`:''}</div>
+              <div class="risk-cat">${escapeHtml(CATEGORIA_LABELS[p.categoria]||p.categoria)}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="pct-badge" style="background:var(--${p.semaforo==='rojo'?'rojo':'amarillo'}-soft);color:var(--${p.semaforo==='rojo'?'rojo':'amarillo'});">${fmtPct(p.pct)}</span>
+              <span class="semaforo sem-${p.semaforo}"></span>
+            </div>
+          </div>`).join("")}
+      </div>
     </div>
     <div style="text-align:center;">${syncBadge()}</div>
   `;
