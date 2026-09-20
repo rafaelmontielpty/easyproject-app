@@ -61,6 +61,8 @@
   .gauge-legend{display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--steel);}
   .gauge-legend span{display:flex;align-items:center;gap:5px;}
   .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .ring-wrap{display:flex;flex-direction:column;align-items:center;padding:2px 0;}
+  .ring-figure{width:100%;max-width:150px;}
   .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 12px 11px;}
   .kpi .k-label{font-size:10.5px;color:var(--steel);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
@@ -69,6 +71,12 @@
   .kpi.accent .k-value{color:#7a3f1f;}
   .kpi.pos .k-value{color:var(--verde);}
   .kpi.neg .k-value{color:var(--rojo);}
+  .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .mini{background:var(--paper);border-radius:9px;padding:10px 11px;}
+  .mini .m-label{font-size:9.5px;color:var(--steel-soft);text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+  .mini .m-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--ink);margin-top:4px;word-break:break-word;}
+  .mini .m-value.pos{color:var(--verde);}
+  .mini .m-value.neg{color:var(--rojo);}
   .risk-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);gap:10px;}
   .risk-row:last-child{border-bottom:none;}
   .risk-id{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;}
@@ -98,8 +106,8 @@
   .tabbar-inner{max-width:1200px;width:100%;display:flex;}
   .tab-btn{flex:1;background:none;border:none;color:#7C8CA0;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Inter',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;letter-spacing:.01em;}
   .tab-btn svg{width:19px;height:19px;}
-  .tab-btn.active{color:#fff;}
-  .tab-btn.active svg{stroke:var(--copper);}
+  .tab-btn.active{color:#fff;background:var(--copper);border-radius:14px;margin:4px 3px;}
+  .tab-btn.active svg{stroke:#fff;}
   .list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;}
   .list-head h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0;}
   .head-actions{display:flex;gap:6px;}
@@ -964,23 +972,21 @@ function computeDashboardAll(){
 }
 
 /* =========================================================
-   GAUGE SVG
+   RING SVG (reemplaza al gauge de aguja)
    ========================================================= */
-function gaugeSvg(pct){
-  const clamped = Math.max(0, Math.min(pct, 1.25));
-  const angle = -90 + clamped*144;
-  const color = pct>0.9 ? 'var(--rojo)' : pct>=0.7 ? 'var(--amarillo)' : 'var(--verde)';
+function ringSvg(pct){
+  const clamped = Math.max(0, Math.min(pct, 1));
+  const color = pct>0.9 ? 'var(--rojo)' : pct>=0.7 ? 'var(--amarillo)' : '#4ade80';
+  const r = 50, c = 2*Math.PI*r;
+  const dash = clamped*c;
   return `
-  <svg class="gauge-figure" viewBox="0 0 220 130">
-    <path d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="#E3E9EB" stroke-width="14" stroke-linecap="round"/>
-    <path d="M20 110 A90 90 0 0 1 74 27" fill="none" stroke="var(--verde)" stroke-width="14" stroke-linecap="round" opacity="0.85"/>
-    <path d="M74 27 A90 90 0 0 1 146 27" fill="none" stroke="var(--amarillo)" stroke-width="14" opacity="0.85"/>
-    <path d="M146 27 A90 90 0 0 1 200 110" fill="none" stroke="var(--rojo)" stroke-width="14" stroke-linecap="round" opacity="0.85"/>
-    <g transform="rotate(${angle} 110 110)">
-      <line x1="110" y1="110" x2="110" y2="34" stroke="${color}" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="110" cy="110" r="9" fill="${color}"/>
-      <circle cx="110" cy="110" r="4" fill="#fff"/>
-    </g>
+  <svg class="ring-figure" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="12"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round"
+            stroke-dasharray="${c.toFixed(1)} ${c.toFixed(1)}" stroke-dashoffset="${(c-dash).toFixed(1)}"
+            transform="rotate(-90 60 60)"/>
+    <text x="60" y="57" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="21" font-weight="700" fill="#fff">${fmtPct(pct)}</text>
+    <text x="60" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="#aebac1">consumido</text>
   </svg>`;
 }
 
@@ -995,14 +1001,8 @@ function renderDashboard(){
     <div class="dash-hero">
       <div>
         <div class="section-title">Presupuesto consumido <span class="tag">${isAll?'TODOS LOS PROYECTOS':'GLOBAL'}</span></div>
-        <div class="gauge-wrap">
-          ${gaugeSvg(d.pctGlobal)}
-          <div class="gauge-readout">${fmtPct(d.pctGlobal)}</div>
-          <div class="gauge-legend">
-            <span><i class="dot" style="background:var(--verde)"></i>&lt;70%</span>
-            <span><i class="dot" style="background:var(--amarillo)"></i>70–90%</span>
-            <span><i class="dot" style="background:var(--rojo)"></i>&gt;90%</span>
-          </div>
+        <div class="ring-wrap">
+          ${ringSvg(d.pctGlobal)}
         </div>
       </div>
       <div class="dash-hero-stats">
@@ -1048,31 +1048,31 @@ function renderDashboard(){
 
       <div class="card">
         <div class="section-title">Rentabilidad del proyecto</div>
-        <div class="kpi-grid">
-          <div class="kpi accent"><div class="k-label">Venta total</div><div class="k-value">${fmtMoney(d.ventaTotal)}</div></div>
-          <div class="kpi"><div class="k-label">Costo real</div><div class="k-value">${fmtMoney(d.costoTotalReal)}</div></div>
-          <div class="kpi ${d.rentabilidadTotal>=0?'pos':'neg'}"><div class="k-label">Rentabilidad</div><div class="k-value">${fmtMoney(d.rentabilidadTotal)}</div></div>
-          <div class="kpi ${d.rentabilidadTotal>=0?'pos':'neg'}"><div class="k-label">% Rentabilidad</div><div class="k-value">${fmtPct(d.pctRentabilidadTotal)}</div></div>
+        <div class="mini-grid">
+          <div class="mini"><div class="m-label">Venta total</div><div class="m-value">${fmtMoney(d.ventaTotal)}</div></div>
+          <div class="mini"><div class="m-label">Costo real</div><div class="m-value">${fmtMoney(d.costoTotalReal)}</div></div>
+          <div class="mini"><div class="m-label">Rentabilidad</div><div class="m-value ${d.rentabilidadTotal>=0?'pos':'neg'}">${fmtMoney(d.rentabilidadTotal)}</div></div>
+          <div class="mini"><div class="m-label">% Rentabilidad</div><div class="m-value ${d.rentabilidadTotal>=0?'pos':'neg'}">${fmtPct(d.pctRentabilidadTotal)}</div></div>
         </div>
       </div>
 
       <div class="card">
         <div class="section-title">Ajustado con gastos generales</div>
-        <div class="kpi-grid">
-          <div class="kpi"><div class="k-label">Gastos generales</div><div class="k-value">${fmtMoney(d.genTotal)}</div></div>
-          <div class="kpi ${d.rentabilidadAjustada>=0?'pos':'neg'}"><div class="k-label">Rentab. ajustada</div><div class="k-value">${fmtMoney(d.rentabilidadAjustada)}</div></div>
-          <div class="kpi ${d.rentabilidadAjustada>=0?'pos':'neg'}"><div class="k-label">% ajustado</div><div class="k-value">${fmtPct(d.pctRentabilidadAjustada)}</div></div>
-          <div class="kpi"><div class="k-label">M. de obra registrada</div><div class="k-value">${fmtMoney(d.manoTotal)}</div></div>
+        <div class="mini-grid">
+          <div class="mini"><div class="m-label">Gastos generales</div><div class="m-value">${fmtMoney(d.genTotal)}</div></div>
+          <div class="mini"><div class="m-label">Rentab. ajustada</div><div class="m-value ${d.rentabilidadAjustada>=0?'pos':'neg'}">${fmtMoney(d.rentabilidadAjustada)}</div></div>
+          <div class="mini"><div class="m-label">% ajustado</div><div class="m-value ${d.rentabilidadAjustada>=0?'pos':'neg'}">${fmtPct(d.pctRentabilidadAjustada)}</div></div>
+          <div class="mini"><div class="m-label">M. de obra registrada</div><div class="m-value">${fmtMoney(d.manoTotal)}</div></div>
         </div>
       </div>
 
       <div class="card">
         <div class="section-title">Pagos y extras</div>
-        <div class="kpi-grid">
-          <div class="kpi neg"><div class="k-label">Pendiente de pago</div><div class="k-value">${fmtMoney(d.pendienteTotal)}</div></div>
-          <div class="kpi"><div class="k-label">Venta extras aprob.</div><div class="k-value">${fmtMoney(d.ventaExtras)}</div></div>
-          <div class="kpi ${d.rentabilidadExtras>=0?'pos':'neg'}"><div class="k-label">Rentab. extras</div><div class="k-value">${fmtMoney(d.rentabilidadExtras)}</div></div>
-          <div class="kpi"><div class="k-label">Partidas en riesgo</div><div class="k-value">${d.riesgo.length}</div></div>
+        <div class="mini-grid">
+          <div class="mini"><div class="m-label">Pendiente de pago</div><div class="m-value neg">${fmtMoney(d.pendienteTotal)}</div></div>
+          <div class="mini"><div class="m-label">Venta extras aprob.</div><div class="m-value">${fmtMoney(d.ventaExtras)}</div></div>
+          <div class="mini"><div class="m-label">Rentab. extras</div><div class="m-value ${d.rentabilidadExtras>=0?'pos':'neg'}">${fmtMoney(d.rentabilidadExtras)}</div></div>
+          <div class="mini"><div class="m-label">Partidas en riesgo</div><div class="m-value">${d.riesgo.length}</div></div>
         </div>
       </div>
 
