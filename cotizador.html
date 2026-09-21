@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cotizador · Easy Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paleta de marca real Easy Project: carbón + azul (tomados del logo) */
+    --ink:#444444; --ink-2:#5A5A5A; --steel:#5C5C5C; --steel-soft:#8F8F8F;
+    --paper:#EFF0F0; --card:#FFFFFF; --line:#E1E1E1;
+    --copper:#1181AB; --copper-soft:#DCEEF4;
+    --verde:#2F9E44; --verde-soft:#E4F6E7;
+    --amarillo:#B8790A; --amarillo-soft:#FCF0D8;
+    --rojo:#D33636; --rojo-soft:#FBE2E2;
+    --azul:#1181AB; --azul-soft:#DCEEF4;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink);font-family:'Inter',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .shell{
+    max-width:1200px;margin:0 auto;background:var(--paper);min-height:100vh;position:relative;
+    display:flex;flex-direction:column;
+    background-image:linear-gradient(var(--line) 1px, transparent 1px),linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:24px 24px;background-position:-1px -1px;
+  }
+  header.topbar{
+    background:var(--ink);color:#fff;padding:16px 18px 14px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:20;border-bottom:3px solid var(--copper);
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-logo-badge{background:#fff;border-radius:10px;padding:6px 10px;display:flex;align-items:center;flex-shrink:0;}
+  .brand-logo-badge svg{display:block;height:38px;width:auto;}
+  .brand-text h1{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0;font-weight:700;letter-spacing:.01em;}
+  .help-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;}
+  main{flex:1;padding:16px 14px 96px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,27,45,.04);}
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--steel);margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .section-title .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--copper-soft);color:var(--copper);padding:2px 7px;border-radius:20px;font-weight:600;}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 12px 11px;}
+  .kpi .k-label{font-size:10.5px;color:var(--steel);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .kpi .k-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:18px;color:var(--ink);margin-top:4px;word-break:break-word;}
+  .kpi.accent{border-color:var(--copper);background:var(--copper-soft);}
+  .kpi.accent .k-value{color:#7a3f1f;}
+  .kpi.pos .k-value{color:var(--verde);}
+  .kpi.azul .k-value{color:var(--azul);}
+  nav.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid #223349;display:flex;justify-content:center;z-index:30;}
+  .tabbar-inner{max-width:1200px;width:100%;display:flex;}
+  .tab-btn{flex:1;background:none;border:none;color:#7C8CA0;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Inter',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;letter-spacing:.01em;}
+  .tab-btn svg{width:19px;height:19px;}
+  .tab-btn.active{color:#fff;}
+  .tab-btn.active svg{stroke:var(--copper);}
+  .list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;}
+  .list-head h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0;}
+  .head-actions{display:flex;gap:6px;}
+  .btn{font-family:'Inter',sans-serif;font-weight:600;font-size:13px;border-radius:9px;padding:9px 14px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-copper{background:var(--copper);color:#fff;}
+  .btn-azul{background:var(--azul);color:#fff;}
+  .btn-verde{background:var(--verde);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--steel);border:1px solid var(--line);}
+  .btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;}
+  .btn-icon{padding:6px 9px;font-size:13px;border-radius:7px;}
+  .btn-block{width:100%;justify-content:center;}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .subtabs{display:flex;gap:6px;margin-bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:4px;}
+  .subtab-btn{flex:1;border:none;background:transparent;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:600;color:var(--steel);cursor:pointer;}
+  .subtab-btn.active{background:var(--ink);color:#fff;}
+  .form-panel{background:#FBFAF8;border:1px dashed var(--copper);border-radius:12px;padding:14px;margin-bottom:16px;display:none;}
+  .form-panel.open{display:block;}
+  .field{margin-bottom:11px;}
+  .field label{display:block;font-size:11.5px;font-weight:600;color:var(--steel);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em;}
+  .field input, .field select, .field textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--ink);}
+  .field textarea{resize:vertical;min-height:52px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .form-actions{display:flex;gap:8px;margin-top:14px;}
+  .record{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:9px;}
+  .record-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .btn-del{background:var(--rojo-soft);color:var(--rojo);border:none;width:26px;height:26px;border-radius:7px;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .record-title{font-weight:600;font-size:13.5px;}
+  .record-sub{font-size:11.5px;color:var(--steel-soft);margin-top:1px;}
+  .record-total{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14.5px;white-space:nowrap;}
+  .record-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .chip{font-size:10.5px;padding:3px 8px;border-radius:20px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .chip-borrador{background:var(--paper);color:var(--steel);}
+  .chip-enviada{background:var(--azul-soft);color:var(--azul);}
+  .chip-aprobada{background:var(--verde-soft);color:var(--verde);}
+  .chip-rechazada{background:var(--rojo-soft);color:var(--rojo);}
+  .chip-cat{background:var(--paper);color:var(--steel);}
+  .empty-note{color:var(--steel-soft);font-size:12.5px;text-align:center;padding:10px 0;}
+  .item-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);gap:8px;}
+  .item-row:last-child{border-bottom:none;}
+  .item-row .ir-desc{font-size:12.5px;font-weight:600;}
+  .item-row .ir-sub{font-size:11px;color:var(--steel-soft);}
+  .item-row .ir-total{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;white-space:nowrap;}
+  .totals-box{background:var(--paper);border-radius:10px;padding:10px 12px;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .totals-box .tl{display:flex;justify-content:space-between;padding:3px 0;}
+  .overlay{position:fixed;inset:0;background:rgba(15,27,45,.55);z-index:40;display:none;align-items:flex-end;justify-content:center;}
+  .overlay.open{display:flex;}
+  .sheet{background:#fff;max-width:640px;width:100%;border-radius:18px 18px 0 0;padding:20px 20px 26px;max-height:86vh;overflow-y:auto;}
+  .sheet h3{font-family:'Space Grotesk',sans-serif;margin:0 0 12px;font-size:17px;}
+  .sheet p, .sheet li{font-size:13.5px;line-height:1.55;color:var(--steel);}
+  .sheet ul{padding-left:18px;}
+  .sheet .close-x{float:right;background:var(--paper);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:15px;font-weight:700;color:var(--steel);}
+  .name-sheet .field{margin-bottom:14px;}
+  .loading{position:fixed;inset:0;background:var(--ink);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:10px;}
+  .loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.2);border-top-color:var(--copper);animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .loading span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9BB0C4;}
+  .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;opacity:0;transition:all .25s ease;z-index:60;pointer-events:none;font-weight:600;text-align:center;max-width:88%;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .footnote{font-size:11px;color:var(--steel-soft);text-align:center;margin-top:4px;line-height:1.5;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;position:relative;top:-1px;}
+  .sync-ok{background:var(--verde);} .sync-err{background:var(--rojo);} .sync-loading{background:var(--amarillo);animation:sp 1s linear infinite;}
+  .setup-gate{min-height:100vh;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .setup-card{max-width:440px;background:var(--ink-2);border:1px solid #223349;border-radius:16px;padding:26px 22px;}
+  .setup-card h2{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0 0 10px;}
+  .setup-card p{font-size:13.5px;line-height:1.6;color:#B7C4D4;}
+  .setup-card code{background:#0A1420;padding:2px 6px;border-radius:5px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--copper);}
+  .version-pill{font-size:10px;font-family:'IBM Plex Mono',monospace;background:var(--paper);color:var(--steel);padding:2px 7px;border-radius:20px;font-weight:700;}
+  .link-btn{background:none;border:none;color:var(--azul);font-size:12px;font-weight:600;cursor:pointer;padding:2px 0;}
+  .catalog-mini{font-size:11.5px;color:var(--steel);background:var(--paper);border-radius:8px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+
+  /* ---------- VISTA DE PROPUESTA IMPRIMIBLE ---------- */
+  #printView{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printView, #printView *{visibility:visible;}
+    #printView{display:block !important;position:absolute;top:0;left:0;width:100%;padding:0;}
+    .no-print{display:none !important;}
+  }
+  .prop-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--copper);padding-bottom:14px;margin-bottom:18px;gap:16px;}
+  .prop-logo svg{display:block;width:300px;max-width:100%;height:auto;}
+  .prop-contact{font-size:10.5px;color:var(--steel);margin-top:10px;line-height:1.65;}
+  .prop-meta{font-size:12px;color:var(--steel);text-align:right;line-height:1.6;white-space:nowrap;}
+  .prop-block{margin-bottom:16px;}
+  .prop-block h4{font-family:'Space Grotesk',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--steel);margin:0 0 6px;}
+  .prop-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .prop-table th{text-align:left;background:var(--paper);padding:7px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--steel);border-bottom:1px solid var(--line);}
+  .prop-table td{padding:7px 8px;border-bottom:1px solid var(--line);}
+  .prop-table td.num{text-align:right;font-family:'IBM Plex Mono',monospace;}
+  .prop-total-row td{font-weight:700;background:var(--copper-soft);}
+  .prop-footer{margin-top:20px;font-size:11px;color:var(--steel-soft);line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loadingScreen">
+  <div class="spin"></div>
+  <span>CONECTANDO CON GOOGLE SHEETS…</span>
+</div>
+
+<div id="setupGate" style="display:none;">
+  <div class="setup-gate">
+    <div class="setup-card">
+      <h2>⚙️ Falta conectar Google Sheets</h2>
+      <p>Pega la URL de tu Apps Script (misma que usa Control de Gastos) en la constante <code>SHEETS_API_URL</code> al inicio del archivo.</p>
+    </div>
+  </div>
+</div>
+
+<div class="shell" id="appShell" style="display:none;">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo-badge" id="brandLogoSlot"></div>
+      <div class="brand-text">
+        <h1>Cotizador</h1>
+      </div>
+    </div>
+    <button class="help-btn" onclick="toggleHelp(true)">?</button>
+  </header>
+
+  <main id="content"></main>
+
+  <nav class="tabbar">
+    <div class="tabbar-inner" id="tabbar"></div>
+  </nav>
+</div>
+
+<div class="overlay" id="helpOverlay">
+  <div class="sheet">
+    <button class="close-x" onclick="toggleHelp(false)">✕</button>
+    <h3>Guía rápida</h3>
+    <ul>
+      <li><strong>Pipeline</strong> — valor total cotizado por estado, y las cotizaciones recientes.</li>
+      <li><strong>Cotizaciones</strong> — crea, edita, marca como enviada, y aprueba para activar el proyecto en Control de Gastos.</li>
+      <li><strong>Catálogo</strong> — equipos, materiales y mano de obra con su costo y margen sugerido; alimenta el armado de cotizaciones.</li>
+    </ul>
+    <p><strong>Versiones:</strong> si necesitas cambiar una cotización que ya enviaste, usa "Nueva versión" — queda un historial y la original no se pierde.</p>
+    <p><strong>Aprobar:</strong> al aprobar una cotización se crea automáticamente el proyecto activo con su catálogo de partidas, listo para capturarle gastos en Control de Gastos.</p>
+  </div>
+</div>
+
+<div class="overlay" id="nameOverlay">
+  <div class="sheet name-sheet">
+    <h3>¿Quién cotiza hoy?</h3>
+    <div class="field">
+      <label>Nombre y apellido</label>
+      <input type="text" id="nameInput" placeholder="Ej. Carlos Pérez">
+    </div>
+    <button class="btn btn-copper btn-block" onclick="saveUserName()">Continuar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="printView"></div>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN — misma URL de Apps Script que Control de Gastos
+   ========================================================= */
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbx3YuaIi8a2gVKSHzrsBPKeDeHKD6DR5BgQBB5rQ9vkWJy2lwry-fFqj9SNwAWL52eCew/exec";
+const EMPRESA = {
+  nombre:"EASY PROJECT, S.A.",
+  direccion:"Vía España, Plaza CLA, Local 5, San Francisco, Panamá",
+  telefono:"+507 6017-6376",
+  correo:"tecnocool.rmontiel@gmail.com",
+  ruc:"155686990-2-2019 DV 2",
+  web:"threads.com/@easyproject.pty"
+};
+// Logo vectorial de la marca (mismo SVG en el encabezado de la app y en la propuesta)
+const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 924 606" role="img" aria-label="Easy Project - Soluciones en Climatización"><polygon points="357,12 246,156 186,228 108,150 168,66" fill="#444444"></polygon><polygon points="360,12 468,153 378,66" fill="#444444"></polygon><g fill="none" stroke="#1181AB" stroke-width="25" stroke-linejoin="miter" stroke-linecap="butt"><polyline points="63,178 186,291 285,225"></polyline><polyline points="63,250 186,363 285,297"></polyline><polyline points="63,322 186,435 285,369"></polyline></g><g fill="#444444" font-family="Helvetica, Arial, sans-serif" font-weight="400"><text x="360" y="327" font-size="138" textLength="390" lengthAdjust="spacingAndGlyphs">EASY</text><text x="366" y="441" font-size="113" textLength="540" lengthAdjust="spacingAndGlyphs">PROJECT</text></g><g fill="#1181AB" font-family="Helvetica, Arial, sans-serif" font-weight="700"><text x="198" y="537" font-size="84" textLength="522" lengthAdjust="spacingAndGlyphs">SOLUCIONES</text><text x="198" y="591" font-size="56" textLength="516" lengthAdjust="spacingAndGlyphs">EN CLIMATIZACIÓN</text></g></svg>`;
+document.getElementById("brandLogoSlot").innerHTML = LOGO_SVG;
+const ITBMS_RATE = 0.07; // Panamá
+
+const CATEGORIA_LABELS = {
+  "SUM-EQP":"Suministro · Equipos",
+  "SUM-MAT":"Suministro · Materiales instalación",
+  "SUM-ESC":"Suministro · Escotillas",
+  "SUM-DMP":"Suministro · Dampers",
+  "SUM-DCT":"Suministro · Ductería",
+  "SUM-REJ":"Suministro · Rejillas",
+  "SUM-GYP":"Suministro · Gypsum",
+  "SUM-ELE":"Suministro · Electricidad",
+  "SUM-PLO":"Suministro · Plomería",
+  "SUM-VAR":"Suministro · Varios",
+  "MAO-DMP":"Mano de obra · Dampers",
+  "MAO-DCT":"Mano de obra · Ductería",
+  "MAO-REJ":"Mano de obra · Rejillas",
+  "MAO-INS":"Mano de obra · Instalación",
+  "MAO-SUP":"Mano de obra · Supervisión",
+  "MAO-GYP":"Mano de obra · Gypsum",
+  "MAO-ELE":"Mano de obra · Electricidad",
+  "MAO-PLO":"Mano de obra · Plomería",
+  "MAO-VAR":"Mano de obra · Varios",
+  "VIA":"Viáticos"
+};
+const TIPO_SISTEMA_OPTS = ["VRF-Inverter","UMATCH-Inverter","UMATCH Compacto","Split Central/Autocontenido","Minisplit"];
+const TIPO_UNIDAD_OPTS = ["Condensadora","Fan Coil","Cassette","Pared","Ducto Oculto"];
+const MAT_CATEGORIA_OPTS = ["SUM-MAT","SUM-ESC","SUM-DMP","SUM-DCT","SUM-REJ","SUM-GYP","SUM-ELE","SUM-PLO","SUM-VAR"];
+const MAO_CATEGORIA_OPTS = ["MAO-DMP","MAO-DCT","MAO-REJ","MAO-INS","MAO-SUP","MAO-GYP","MAO-ELE","MAO-PLO","MAO-VAR"];
+const TIPO_CLIENTE_OPTS = ["Jurídico","Natural"];
+
+/* ---------- ESTADO ---------- */
+let catalogoEquipos = [], catalogoMateriales = [], catalogoManoObra = [];
+let cotizaciones = [], cotizacionItems = [], proyectos = [];
+let clientes = [];
+let userName = "";
+let currentTab = "pipeline";
+let catalogoSubTab = "equipos";
+let syncState = "ok"; let lastSyncAt = null;
+let formCotizacionOpen = false;
+let draft = null; // { id, grupoId, version, clienteId, cliente, proyectoNombre, fecha, validoHasta, margenDefaultPct, notas, items:[] }
+let itemFormOpen = false;
+let editingItemIndex = null; // índice en draft.items si se está editando una línea existente
+let itemOrigen = "MATERIAL"; // EQUIPO | MATERIAL | MANO_OBRA | LIBRE
+let expandedHistory = {}; // grupoId -> bool
+let catalogFormOpen = { equipos:false, materiales:false, manoobra:false, clientes:false };
+let clienteFormOpen = false; // "+ Nuevo cliente" inline dentro del editor de cotización
+
+const TABS = [
+  {id:"pipeline", label:"Pipeline", icon:'<path d="M3 12l9-9 9 9M5 10v10h14V10"/>'},
+  {id:"cotizaciones", label:"Cotizaciones", icon:'<path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>'},
+  {id:"catalogo", label:"Catálogo", icon:'<path d="M4 6h16M4 12h16M4 18h10"/>'}
+];
+
+/* ---------- API (igual patrón JSONP que Control de Gastos) ---------- */
+function jsonpRequest(url, timeoutMs){
+  return new Promise((resolve, reject) => {
+    const cbName = "__cot_cb_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+    const script = document.createElement("script");
+    let done = false;
+    const timer = setTimeout(() => { if(done) return; done = true; cleanup(); reject(new Error("Tiempo de espera agotado")); }, timeoutMs||15000);
+    function cleanup(){ clearTimeout(timer); delete window[cbName]; if(script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = (data) => { if(done) return; done = true; cleanup(); resolve(data); };
+    script.onerror = () => { if(done) return; done = true; cleanup(); reject(new Error("No se pudo conectar (red o URL incorrecta)")); };
+    const sep = url.indexOf("?")>=0 ? "&" : "?";
+    script.src = url + sep + "callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+async function jsonpWithRetry(url, timeoutMs, retries){
+  try{ return await jsonpRequest(url, timeoutMs); }
+  catch(e){ if(retries>0){ await new Promise(r=>setTimeout(r,1200)); return jsonpWithRetry(url, timeoutMs, retries-1); } throw e; }
+}
+async function apiGetAll(){
+  try{ const data = await jsonpWithRetry(SHEETS_API_URL, 30000, 1); return { ok:true, data }; }
+  catch(e){ return { ok:false, error: e.message||String(e) }; }
+}
+async function apiAdd(table, record){
+  try{
+    const url = SHEETS_API_URL + "?action=add&table=" + encodeURIComponent(table) + "&record=" + encodeURIComponent(JSON.stringify(record));
+    const data = await jsonpWithRetry(url, 25000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return { ok:true };
+  }catch(e){ return { ok:false, error: e.message||String(e) }; }
+}
+async function apiUpdate(table, id, record){
+  try{
+    const url = SHEETS_API_URL + "?action=update&table=" + encodeURIComponent(table) + "&id=" + encodeURIComponent(id) + "&record=" + encodeURIComponent(JSON.stringify(record));
+    const data = await jsonpWithRetry(url, 25000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return { ok:true };
+  }catch(e){ return { ok:false, error: e.message||String(e) }; }
+}
+async function apiDelete(table, id){
+  try{
+    const url = SHEETS_API_URL + "?action=delete&table=" + encodeURIComponent(table) + "&id=" + encodeURIComponent(id);
+    const data = await jsonpWithRetry(url, 25000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return { ok:true };
+  }catch(e){ return { ok:false, error: e.message||String(e) }; }
+}
+async function apiApproveCotizacion(cotizacionId){
+  try{
+    const url = SHEETS_API_URL + "?action=approveCotizacion&cotizacionId=" + encodeURIComponent(cotizacionId);
+    const data = await jsonpWithRetry(url, 25000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return data;
+  }catch(e){ return { ok:false, error: e.message||String(e) }; }
+}
+async function refreshAll(silent){
+  syncState = "loading"; if(!silent) renderTab();
+  const r = await apiGetAll();
+  if(r.ok){
+    catalogoEquipos = r.data.catalogoEquipos || [];
+    catalogoMateriales = r.data.catalogoMateriales || [];
+    catalogoManoObra = r.data.catalogoManoObra || [];
+    cotizaciones = r.data.cotizaciones || [];
+    cotizacionItems = r.data.cotizacionItems || [];
+    proyectos = r.data.proyectos || [];
+    clientes = r.data.clientes || [];
+    syncState = "ok"; lastSyncAt = new Date();
+  }else{ syncState = "error"; }
+  renderTab();
+  return r.ok;
+}
+
+/* ---------- ALMACENAMIENTO PERSONAL ---------- */
+async function loadPersonal(key){ try{ const r = await window.storage.get(key,false); return r?r.value:""; }catch(e){ return ""; } }
+async function savePersonal(key,val){ try{ await window.storage.set(key,val,false); }catch(e){} }
+
+/* ---------- INIT ---------- */
+async function init(){
+  if(!SHEETS_API_URL || SHEETS_API_URL.indexOf("__SHEETS_API_URL__")>=0){
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("setupGate").style.display = "block";
+    return;
+  }
+  userName = await loadPersonal("usuario_nombre");
+  const ok = await refreshAll(true);
+  document.getElementById("loadingScreen").style.display = "none";
+  document.getElementById("appShell").style.display = "flex";
+  buildTabbar(); renderTab();
+  if(!ok) showToast("No se pudo conectar con Google Sheets. Pulsa ↻ para reintentar.");
+  if(!userName){ toggleName(true); }
+}
+function buildTabbar(){
+  document.getElementById("tabbar").innerHTML = TABS.map(t => `
+    <button class="tab-btn ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>
+      ${t.label}
+    </button>`).join("");
+}
+function switchTab(id){ currentTab = id; buildTabbar(); renderTab(); window.scrollTo(0,0); refreshAll(true); }
+function renderTab(){
+  const el = document.getElementById("content");
+  if(currentTab==="pipeline") el.innerHTML = renderPipeline();
+  else if(currentTab==="cotizaciones") el.innerHTML = renderCotizaciones();
+  else if(currentTab==="catalogo") el.innerHTML = renderCatalogo();
+}
+
+/* ---------- HELPERS ---------- */
+function fmtMoney(n){ n = Number(n)||0; return "B/. " + n.toLocaleString('es-PA',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtPct(n){ if(!isFinite(n)) return "—"; return (Number(n)||0).toFixed(1) + "%"; }
+function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function showToast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2800); }
+function toggleHelp(open){ document.getElementById("helpOverlay").classList.toggle("open", open); }
+function toggleName(open){ document.getElementById("nameOverlay").classList.toggle("open", open); }
+async function saveUserName(){
+  const v = document.getElementById("nameInput").value.trim();
+  if(!v){ showToast("Escribe tu nombre para continuar"); return; }
+  userName = v; await savePersonal("usuario_nombre", v); toggleName(false);
+}
+function calcVentaUnit(costo, margenPct){
+  if(costo===""||costo===null||costo===undefined) return null;
+  const c = Number(costo)||0;
+  const m = Math.min(Math.max(Number(margenPct)||0, 0), 95);
+  return c / (1 - m/100);
+}
+function fmtMoneyOrDash(v){ return (v===null||v===""||v===undefined) ? '—' : fmtMoney(v); }
+function syncBadge(){
+  const cls = syncState==="ok" ? "sync-ok" : syncState==="loading" ? "sync-loading" : "sync-err";
+  const label = syncState==="ok" ? (lastSyncAt? "Sincronizado "+lastSyncAt.toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit'}) : "Sincronizado")
+    : syncState==="loading" ? "Sincronizando…" : "Sin conexión con Sheets";
+  return `<span class="footnote"><span class="sync-dot ${cls}"></span>${label}</span>`;
+}
+function latestPerGrupo(){
+  const byGrupo = {};
+  cotizaciones.forEach(c=>{
+    const g = c.grupoId || c.id;
+    if(!byGrupo[g] || Number(c.version)>Number(byGrupo[g].version)) byGrupo[g] = c;
+  });
+  return Object.values(byGrupo).sort((a,b)=> new Date(b.timestamp||0) - new Date(a.timestamp||0));
+}
+function versionsOfGrupo(grupoId){
+  return cotizaciones.filter(c=>(c.grupoId||c.id)===grupoId).sort((a,b)=>Number(a.version)-Number(b.version));
+}
+function itemsOf(cotizacionId){ return cotizacionItems.filter(i=>String(i.cotizacionId)===String(cotizacionId)); }
+function totalsOf(cotizacionId){
+  const items = itemsOf(cotizacionId);
+  const totalCosto = items.reduce((s,i)=>s+Number(i.totalCosto),0);
+  const totalVenta = items.reduce((s,i)=>s+Number(i.totalVenta),0);
+  return { totalCosto, totalVenta, rentabilidad: totalVenta-totalCosto, pctMargen: totalVenta>0?(totalVenta-totalCosto)/totalVenta*100:0, count: items.length };
+}
+
+/* ---------- RENDER: PIPELINE ---------- */
+function renderPipeline(){
+  const latest = latestPerGrupo();
+  const porEstado = { Borrador:0, Enviada:0, Aprobada:0, Rechazada:0 };
+  const valorPorEstado = { Borrador:0, Enviada:0, Aprobada:0, Rechazada:0 };
+  latest.forEach(c=>{
+    const t = totalsOf(c.id);
+    if(porEstado[c.estado]===undefined) return;
+    porEstado[c.estado]++;
+    valorPorEstado[c.estado]+= t.totalVenta;
+  });
+  const pipelineActivo = valorPorEstado.Borrador + valorPorEstado.Enviada;
+  const recientes = latest.slice(0,6);
+  return `
+    <div class="card">
+      <div class="list-head" style="margin-bottom:0;"><div></div>
+        <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+      </div>
+      <div class="section-title">Pipeline activo <span class="tag">BORRADOR + ENVIADA</span></div>
+      <div class="kpi-grid">
+        <div class="kpi accent"><div class="k-label">Valor en pipeline (sin ITBMS)</div><div class="k-value">${fmtMoney(pipelineActivo)}</div></div>
+        <div class="kpi"><div class="k-label"># Cotizaciones abiertas</div><div class="k-value">${porEstado.Borrador+porEstado.Enviada}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Por estado</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="k-label">Borrador</div><div class="k-value">${porEstado.Borrador} · ${fmtMoney(valorPorEstado.Borrador)}</div></div>
+        <div class="kpi azul"><div class="k-label">Enviada</div><div class="k-value">${porEstado.Enviada} · ${fmtMoney(valorPorEstado.Enviada)}</div></div>
+        <div class="kpi pos"><div class="k-label">Aprobada</div><div class="k-value">${porEstado.Aprobada} · ${fmtMoney(valorPorEstado.Aprobada)}</div></div>
+        <div class="kpi"><div class="k-label">Rechazada</div><div class="k-value">${porEstado.Rechazada} · ${fmtMoney(valorPorEstado.Rechazada)}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Cotizaciones recientes</div>
+      ${recientes.length===0 ? '<div class="empty-note">Aún no hay cotizaciones.</div>' :
+        recientes.map(c=>{
+          const t = totalsOf(c.id);
+          const chipClass = c.estado==='Aprobada'?'chip-aprobada':c.estado==='Enviada'?'chip-enviada':c.estado==='Rechazada'?'chip-rechazada':'chip-borrador';
+          return `<div class="item-row">
+            <div><div class="ir-desc">${c.numero?escapeHtml(c.numero)+' · ':''}${escapeHtml(c.proyectoNombre||'—')}</div><div class="ir-sub">${escapeHtml(c.cliente||'—')} · v${c.version}</div></div>
+            <div style="text-align:right;"><div class="ir-total">${fmtMoney(t.totalVenta)}</div><span class="chip ${chipClass}">${c.estado}</span></div>
+          </div>`;
+        }).join("")}
+    </div>
+    <div style="text-align:center;">${syncBadge()}</div>
+  `;
+}
+
+/* ---------- RENDER: CATÁLOGO ---------- */
+function renderCatalogo(){
+  return `
+    <div class="list-head"><h2>Catálogo</h2>
+      <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+    </div>
+    <div class="subtabs">
+      <button class="subtab-btn ${catalogoSubTab==='equipos'?'active':''}" onclick="switchCatalogoSub('equipos')">Equipos</button>
+      <button class="subtab-btn ${catalogoSubTab==='materiales'?'active':''}" onclick="switchCatalogoSub('materiales')">Materiales</button>
+      <button class="subtab-btn ${catalogoSubTab==='manoobra'?'active':''}" onclick="switchCatalogoSub('manoobra')">M. Obra</button>
+      <button class="subtab-btn ${catalogoSubTab==='clientes'?'active':''}" onclick="switchCatalogoSub('clientes')">Clientes</button>
+    </div>
+    ${catalogoSubTab==='equipos' ? renderCatalogoEquipos() : catalogoSubTab==='materiales' ? renderCatalogoMateriales() : catalogoSubTab==='manoobra' ? renderCatalogoManoObra() : renderCatalogoClientes()}
+    <div style="text-align:center;margin-top:10px;">${syncBadge()}</div>
+  `;
+}
+function switchCatalogoSub(s){ catalogoSubTab = s; renderTab(); }
+let editingClienteId = null;
+function renderCatalogoClientes(){
+  return `
+    <div class="actions-row" style="margin-bottom:14px;">
+      <button class="btn btn-copper btn-block" onclick="toggleCatalogForm('clientes')">${catalogFormOpen.clientes?'✕ Cerrar':'+ Nuevo cliente'}</button>
+    </div>
+    <div class="form-panel ${catalogFormOpen.clientes?'open':''}">
+      <div class="field"><label>Nombre</label><input type="text" id="cl-nombre" placeholder="Nombre del cliente o empresa"></div>
+      <div class="field">
+        <label>Tipo de cliente</label>
+        <select id="cl-tipoCliente" onchange="onTipoClienteChange()">
+          ${TIPO_CLIENTE_OPTS.map(t=>`<option value="${t}">${t}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label id="cl-identificacion-label">RUC</label><input type="text" id="cl-identificacion" placeholder="Ej. 155686990-2-2019 DV 2"></div>
+      <div class="field-row">
+        <div class="field"><label>Teléfono</label><input type="text" id="cl-telefono" placeholder="+507 ..."></div>
+        <div class="field"><label>Correo</label><input type="text" id="cl-correo" placeholder="correo@ejemplo.com"></div>
+      </div>
+      <div class="field"><label>Contacto (opcional)</label><input type="text" id="cl-contacto" placeholder="Persona de contacto"></div>
+      <div class="field"><label>Notas (opcional)</label><input type="text" id="cl-notas"></div>
+      <div class="form-actions"><button class="btn btn-primary btn-block" id="cl-submit-btn" onclick="submitCliente()">${editingClienteId?'Guardar cambios':'Guardar cliente'}</button></div>
+    </div>
+    ${clientes.length===0 ? '<div class="empty-note">Aún no hay clientes registrados.</div>' :
+      [...clientes].reverse().map(c=>`
+      <div class="record">
+        <div class="record-top">
+          <div><div class="record-title">${escapeHtml(c.nombre)}</div><div class="record-sub">${escapeHtml(c.telefono||'—')} · ${escapeHtml(c.correo||'—')}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="version-pill">${escapeHtml(c.id)}</span>
+            <button class="btn btn-ghost btn-sm" onclick="editarCliente('${c.id}')">Editar</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          ${c.tipoCliente?`<span class="chip chip-cat">${escapeHtml(c.tipoCliente)}</span>`:''}
+          ${c.identificacion?`<span class="chip chip-cat">${c.tipoCliente==='Jurídico'?'RUC':'Cédula/Pasaporte'}: ${escapeHtml(c.identificacion)}</span>`:''}
+          ${c.contacto?`<span class="chip chip-cat">Contacto: ${escapeHtml(c.contacto)}</span>`:''}
+        </div>
+      </div>`).join("")}
+  `;
+}
+function onTipoClienteChange(){
+  const tipo = document.getElementById("cl-tipoCliente").value;
+  document.getElementById("cl-identificacion-label").textContent = tipo==='Jurídico' ? 'RUC' : 'Cédula / Pasaporte';
+  document.getElementById("cl-identificacion").placeholder = tipo==='Jurídico' ? 'Ej. 155686990-2-2019 DV 2' : 'Ej. 8-123-456 o número de pasaporte';
+}
+function editarCliente(id){
+  const c = clientes.find(x=>x.id===id); if(!c) return;
+  editingClienteId = id;
+  catalogFormOpen.clientes = true;
+  renderTab();
+  setTimeout(()=>{
+    document.getElementById("cl-nombre").value = c.nombre||'';
+    document.getElementById("cl-tipoCliente").value = c.tipoCliente||'Jurídico';
+    onTipoClienteChange();
+    document.getElementById("cl-identificacion").value = c.identificacion||'';
+    document.getElementById("cl-telefono").value = c.telefono||'';
+    document.getElementById("cl-correo").value = c.correo||'';
+    document.getElementById("cl-contacto").value = c.contacto||'';
+    document.getElementById("cl-notas").value = c.notas||'';
+  }, 0);
+}
+async function submitCliente(){
+  const nombre = document.getElementById("cl-nombre").value.trim();
+  if(!nombre){ showToast("Escribe el nombre del cliente"); return; }
+  const btn = document.getElementById("cl-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  if(editingClienteId){
+    const original = clientes.find(c=>c.id===editingClienteId);
+    const rec = Object.assign({}, original, {
+      nombre,
+      tipoCliente: document.getElementById("cl-tipoCliente").value,
+      identificacion: document.getElementById("cl-identificacion").value.trim(),
+      telefono: document.getElementById("cl-telefono").value.trim(),
+      correo: document.getElementById("cl-correo").value.trim(),
+      contacto: document.getElementById("cl-contacto").value.trim(),
+      notas: document.getElementById("cl-notas").value.trim()
+    });
+    const r = await apiUpdate("clientes", editingClienteId, rec);
+    if(r.ok){
+      const idx = clientes.findIndex(c=>c.id===editingClienteId);
+      clientes[idx] = rec;
+      editingClienteId = null;
+      catalogFormOpen.clientes = false;
+      showToast("Cliente actualizado");
+      renderTab();
+    }else{
+      btn.disabled = false; btn.textContent = "Guardar cambios";
+      showToast("No se pudo actualizar (sin conexión).");
+    }
+    return;
+  }
+  const rec = {
+    id: 'CLI-' + String(clientes.length+1).padStart(4,'0'),
+    nombre,
+    tipoCliente: document.getElementById("cl-tipoCliente").value,
+    identificacion: document.getElementById("cl-identificacion").value.trim(),
+    telefono: document.getElementById("cl-telefono").value.trim(),
+    correo: document.getElementById("cl-correo").value.trim(),
+    contacto: document.getElementById("cl-contacto").value.trim(),
+    notas: document.getElementById("cl-notas").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const r = await apiAdd("clientes", rec);
+  if(r.ok){
+    clientes.push(rec);
+    catalogFormOpen.clientes = false;
+    showToast("Cliente guardado: " + rec.id);
+    renderTab();
+    return rec;
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar cliente";
+    showToast("No se pudo guardar (sin conexión).");
+
+    return null;
+  }
+}
+
+function renderCatalogoEquipos(){
+  return `
+    <div class="actions-row" style="margin-bottom:14px;">
+      <button class="btn btn-copper btn-block" onclick="toggleCatalogForm('equipos')">${catalogFormOpen.equipos?'✕ Cerrar':'+ Nuevo equipo'}</button>
+    </div>
+    <div class="form-panel ${catalogFormOpen.equipos?'open':''}">
+      <div class="field"><label>Tipo de sistema</label><select id="eq-tipoSistema">${TIPO_SISTEMA_OPTS.map(o=>`<option>${o}</option>`).join("")}</select></div>
+      <div class="field-row">
+        <div class="field"><label>Marca</label><input type="text" id="eq-marca" placeholder="Ej. Trane"></div>
+        <div class="field"><label>Capacidad (BTU)</label><input type="number" id="eq-btu" placeholder="Ej. 24000"></div>
+      </div>
+      <div class="field"><label>Tipo de unidad</label><select id="eq-tipoUnidad">${TIPO_UNIDAD_OPTS.map(o=>`<option>${o}</option>`).join("")}</select></div>
+      <div class="field-row">
+        <div class="field"><label>Costo (opcional — varía por distribuidor)</label><input type="number" step="0.01" id="eq-costo" placeholder="Dejar vacío si no lo sabes aún"></div>
+        <div class="field"><label>Margen sugerido %</label><input type="number" step="0.1" id="eq-margen" placeholder="Ej. 30" value="30"></div>
+      </div>
+      <div class="field"><label>Notas (opcional)</label><input type="text" id="eq-notas"></div>
+      <div class="form-actions"><button class="btn btn-primary btn-block" id="eq-submit-btn" onclick="submitCatalogo('catalogoEquipos','eq')">Guardar equipo</button></div>
+    </div>
+    ${catalogoEquipos.length===0 ? '<div class="empty-note">Aún no hay equipos en el catálogo.</div>' :
+      catalogoEquipos.map(e=>`
+      <div class="record">
+        <div class="record-top">
+          <div><div class="record-title">${escapeHtml(e.marca||'—')} · ${Number(e.capacidadBTU)||0} BTU</div><div class="record-sub">${escapeHtml(e.tipoSistema)} · ${escapeHtml(e.tipoUnidad)}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div class="record-total">${fmtMoneyOrDash(e.costo)}</div>
+          <button class="btn-del" onclick="deleteCatalogo('catalogoEquipos','${e.id}', this)">🗑</button></div>
+        </div>
+        <div class="record-meta"><span class="chip chip-cat">Margen ${fmtPct(e.margenPct)}</span><span class="chip chip-cat">Venta sug. ${fmtMoneyOrDash(calcVentaUnit(e.costo,e.margenPct))}</span></div>
+      </div>`).join("")}
+  `;
+}
+function renderCatalogoMateriales(){
+  return `
+    <div class="actions-row" style="margin-bottom:14px;">
+      <button class="btn btn-copper btn-block" onclick="toggleCatalogForm('materiales')">${catalogFormOpen.materiales?'✕ Cerrar':'+ Nuevo material'}</button>
+    </div>
+    <div class="form-panel ${catalogFormOpen.materiales?'open':''}">
+      <div class="field"><label>Categoría</label><select id="mt-categoria">${MAT_CATEGORIA_OPTS.map(o=>`<option value="${o}">${escapeHtml(CATEGORIA_LABELS[o])}</option>`).join("")}</select></div>
+      <div class="field"><label>Descripción</label><input type="text" id="mt-desc" placeholder="Ej. Tubería cobre 3/8"></div>
+      <div class="field-row">
+        <div class="field"><label>Unidad</label><input type="text" id="mt-unidad" placeholder="SG / ml / pie"></div>
+        <div class="field"><label>Costo (opcional)</label><input type="number" step="0.01" id="mt-costo" placeholder="Dejar vacío si no lo sabes aún"></div>
+      </div>
+      <div class="field"><label>Margen sugerido %</label><input type="number" step="0.1" id="mt-margen" value="35"></div>
+      <div class="form-actions"><button class="btn btn-primary btn-block" id="mt-submit-btn" onclick="submitCatalogo('catalogoMateriales','mt')">Guardar material</button></div>
+    </div>
+    ${catalogoMateriales.length===0 ? '<div class="empty-note">Aún no hay materiales en el catálogo.</div>' :
+      catalogoMateriales.map(m=>`
+      <div class="record">
+        <div class="record-top">
+          <div><div class="record-title">${escapeHtml(m.desc)}</div><div class="record-sub">${escapeHtml(CATEGORIA_LABELS[m.categoria]||m.categoria)} · ${escapeHtml(m.unidad)}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div class="record-total">${fmtMoneyOrDash(m.costo)}</div>
+          <button class="btn-del" onclick="deleteCatalogo('catalogoMateriales','${m.id}', this)">🗑</button></div>
+        </div>
+        <div class="record-meta"><span class="chip chip-cat">Margen ${fmtPct(m.margenPct)}</span><span class="chip chip-cat">Venta sug. ${fmtMoneyOrDash(calcVentaUnit(m.costo,m.margenPct))}</span></div>
+      </div>`).join("")}
+  `;
+}
+function renderCatalogoManoObra(){
+  return `
+    <div class="actions-row" style="margin-bottom:14px;">
+      <button class="btn btn-copper btn-block" onclick="toggleCatalogForm('manoobra')">${catalogFormOpen.manoobra?'✕ Cerrar':'+ Nueva partida M.O.'}</button>
+    </div>
+    <div class="form-panel ${catalogFormOpen.manoobra?'open':''}">
+      <div class="field"><label>Categoría</label><select id="mo-categoria">${MAO_CATEGORIA_OPTS.map(o=>`<option value="${o}">${escapeHtml(CATEGORIA_LABELS[o])}</option>`).join("")}</select></div>
+      <div class="field"><label>Descripción</label><input type="text" id="mo-desc" placeholder="Ej. Instalación de ductería"></div>
+      <div class="field-row">
+        <div class="field"><label>Unidad</label><input type="text" id="mo-unidad" placeholder="SG / hora"></div>
+        <div class="field"><label>Costo (opcional)</label><input type="number" step="0.01" id="mo-costo" placeholder="Dejar vacío si no lo sabes aún"></div>
+      </div>
+      <div class="field"><label>Margen sugerido %</label><input type="number" step="0.1" id="mo-margen" value="40"></div>
+      <div class="form-actions"><button class="btn btn-primary btn-block" id="mo-submit-btn" onclick="submitCatalogo('catalogoManoObra','mo')">Guardar</button></div>
+    </div>
+    ${catalogoManoObra.length===0 ? '<div class="empty-note">Aún no hay partidas de mano de obra en el catálogo.</div>' :
+      catalogoManoObra.map(m=>`
+      <div class="record">
+        <div class="record-top">
+          <div><div class="record-title">${escapeHtml(m.desc)}</div><div class="record-sub">${escapeHtml(CATEGORIA_LABELS[m.categoria]||m.categoria)} · ${escapeHtml(m.unidad)}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div class="record-total">${fmtMoneyOrDash(m.costo)}</div>
+          <button class="btn-del" onclick="deleteCatalogo('catalogoManoObra','${m.id}', this)">🗑</button></div>
+        </div>
+        <div class="record-meta"><span class="chip chip-cat">Margen ${fmtPct(m.margenPct)}</span><span class="chip chip-cat">Venta sug. ${fmtMoneyOrDash(calcVentaUnit(m.costo,m.margenPct))}</span></div>
+      </div>`).join("")}
+  `;
+}
+function toggleCatalogForm(which){
+  catalogFormOpen[which] = !catalogFormOpen[which];
+  if(which==='clientes') editingClienteId = null;
+  renderTab();
+  if(which==='clientes' && catalogFormOpen.clientes) setTimeout(onTipoClienteChange, 0);
+}
+async function submitCatalogo(table, prefix){
+  const rec = { id: uid() };
+  if(table==='catalogoEquipos'){
+    const costoVal = document.getElementById("eq-costo").value;
+    Object.assign(rec, {
+      tipoSistema: document.getElementById("eq-tipoSistema").value,
+      marca: document.getElementById("eq-marca").value.trim(),
+      capacidadBTU: parseFloat(document.getElementById("eq-btu").value)||0,
+      tipoUnidad: document.getElementById("eq-tipoUnidad").value,
+      costo: costoVal===""? "" : parseFloat(costoVal)||0,
+      margenPct: parseFloat(document.getElementById("eq-margen").value)||0,
+      notas: document.getElementById("eq-notas").value.trim()
+    });
+    if(!rec.marca){ showToast("Ingresa al menos la marca"); return; }
+  }else if(table==='catalogoMateriales'){
+    const costoVal = document.getElementById("mt-costo").value;
+    Object.assign(rec, {
+      categoria: document.getElementById("mt-categoria").value,
+      desc: document.getElementById("mt-desc").value.trim(),
+      unidad: document.getElementById("mt-unidad").value.trim(),
+      costo: costoVal===""? "" : parseFloat(costoVal)||0,
+      margenPct: parseFloat(document.getElementById("mt-margen").value)||0
+    });
+    if(!rec.desc){ showToast("Completa la descripción"); return; }
+  }else{
+    const costoVal = document.getElementById("mo-costo").value;
+    Object.assign(rec, {
+      categoria: document.getElementById("mo-categoria").value,
+      desc: document.getElementById("mo-desc").value.trim(),
+      unidad: document.getElementById("mo-unidad").value.trim(),
+      costo: costoVal===""? "" : parseFloat(costoVal)||0,
+      margenPct: parseFloat(document.getElementById("mo-margen").value)||0
+    });
+    if(!rec.desc){ showToast("Completa la descripción"); return; }
+  }
+  const btn = document.getElementById(prefix+"-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd(table, rec);
+  if(r.ok){
+    if(table==='catalogoEquipos') catalogoEquipos.push(rec);
+    else if(table==='catalogoMateriales') catalogoMateriales.push(rec);
+    else catalogoManoObra.push(rec);
+    catalogFormOpen = { equipos:false, materiales:false, manoobra:false, clientes:false };
+    showToast("Guardado en el catálogo");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar";
+    showToast("No se pudo guardar (sin conexión).");
+  }
+}
+async function deleteCatalogo(table, id, btnEl){
+  if(!confirm("¿Eliminar este ítem del catálogo?")) return;
+  btnEl.disabled = true;
+  const r = await apiDelete(table, id);
+  if(r.ok){
+    if(table==='catalogoEquipos') catalogoEquipos = catalogoEquipos.filter(x=>x.id!==id);
+    else if(table==='catalogoMateriales') catalogoMateriales = catalogoMateriales.filter(x=>x.id!==id);
+    else catalogoManoObra = catalogoManoObra.filter(x=>x.id!==id);
+    showToast("Eliminado del catálogo"); renderTab();
+  }else{ btnEl.disabled=false; showToast("No se pudo eliminar."); }
+}
+
+/* ---------- RENDER: COTIZACIONES (lista) ---------- */
+function renderCotizaciones(){
+  if(draft) return renderDraftEditor();
+  const latest = latestPerGrupo();
+  return `
+    <div class="list-head"><h2>Cotizaciones</h2>
+      <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+    </div>
+    <div class="actions-row" style="margin-bottom:14px;">
+      <button class="btn btn-copper btn-block" onclick="nuevaCotizacion()">+ Nueva cotización</button>
+    </div>
+    <div style="text-align:center;margin-bottom:12px;">${syncBadge()}</div>
+    ${latest.length===0 ? '<div class="empty-note">Aún no hay cotizaciones. Crea la primera.</div>' :
+      latest.map(c=>{
+        const t = totalsOf(c.id);
+        const chipClass = c.estado==='Aprobada'?'chip-aprobada':c.estado==='Enviada'?'chip-enviada':c.estado==='Rechazada'?'chip-rechazada':'chip-borrador';
+        const versiones = versionsOfGrupo(c.grupoId||c.id);
+        const grupoId = c.grupoId||c.id;
+        return `
+        <div class="record">
+          <div class="record-top">
+            <div>
+              <div class="record-title">${c.numero?escapeHtml(c.numero)+' · ':''}${escapeHtml(c.proyectoNombre||'Sin nombre')} <span class="version-pill">v${c.version}</span></div>
+              <div class="record-sub">${escapeHtml(c.cliente||'—')} · ${c.fecha||'sin fecha'}</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="record-total">${fmtMoney(t.totalVenta)}</div>
+              <div style="font-size:9.5px;color:var(--steel-soft);">+ITBMS</div>
+              <span class="chip ${chipClass}">${c.estado}</span>
+            </div>
+          </div>
+          <div class="record-meta">
+            <span class="chip chip-cat">${t.count} líneas</span>
+            <span class="chip chip-cat">Margen ${fmtPct(t.pctMargen)}</span>
+            ${c.proyectoIdActivado ? `<span class="chip chip-aprobada">Proyecto ${escapeHtml(c.proyectoIdActivado)}</span>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn btn-ghost btn-sm" onclick="verCotizacion('${c.id}')">Ver / editar</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportarPropuesta('${c.id}')">⭳ Propuesta</button>
+            ${c.estado==='Borrador' ? `<button class="btn btn-azul btn-sm" onclick="cambiarEstado('${c.id}','Enviada')">Marcar enviada</button>` : ''}
+            ${(c.estado==='Enviada'||c.estado==='Borrador') && !c.proyectoIdActivado ? `<button class="btn btn-verde btn-sm" onclick="aprobarCotizacion('${c.id}')">✓ Aprobar → Activar</button>` : ''}
+            ${(c.estado==='Enviada') ? `<button class="btn btn-ghost btn-sm" onclick="cambiarEstado('${c.id}','Rechazada')">Rechazar</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="nuevaVersion('${c.id}')">Nueva versión</button>
+            ${versiones.length>1 ? `<button class="link-btn" onclick="toggleHistorial('${grupoId}')">${expandedHistory[grupoId]?'Ocultar historial':'Historial ('+versiones.length+')'}</button>` : ''}
+          </div>
+          ${expandedHistory[grupoId] ? `<div class="totals-box" style="margin-top:10px;">
+            ${versiones.map(v=>`<div class="tl"><span>v${v.version} · ${v.estado} · ${v.fecha||'sin fecha'}</span><span>${fmtMoney(totalsOf(v.id).totalVenta)}</span></div>`).join("")}
+          </div>` : ''}
+        </div>`;
+      }).join("")}
+  `;
+}
+function toggleHistorial(grupoId){ expandedHistory[grupoId] = !expandedHistory[grupoId]; renderTab(); }
+async function cambiarEstado(id, estado){
+  const c = cotizaciones.find(x=>x.id===id); if(!c) return;
+  const updated = Object.assign({}, c, { estado });
+  const r = await apiUpdate('cotizaciones', id, updated);
+  if(r.ok){ c.estado = estado; showToast("Cotización marcada como " + estado); renderTab(); }
+  else showToast("No se pudo actualizar (sin conexión).");
+}
+async function aprobarCotizacion(id){
+  if(!confirm("Esto crea el proyecto activo y copia las partidas a Control de Gastos. ¿Confirmas?")) return;
+  showToast("Aprobando cotización…");
+  const r = await apiApproveCotizacion(id);
+  if(r.ok){
+    showToast("Proyecto activado: " + r.proyectoNombre + " (" + r.proyectoId + ")");
+    await refreshAll(true);
+  }else{
+    showToast("No se pudo aprobar: " + (r.error||'error desconocido'));
+  }
+}
+
+/* ---------- CREAR / EDITAR COTIZACIÓN (draft en memoria) ---------- */
+function nuevaCotizacion(){
+  draft = { id:null, numero:null, grupoId:null, version:1, clienteId:"", cliente:"", proyectoNombre:"", fecha:new Date().toISOString().slice(0,10),
+    validoHasta:"", margenDefaultPct:30, notas:"", items:[], baseId:null };
+  itemFormOpen = false; clienteFormOpen = false; renderTab();
+}
+function nuevaVersion(id){
+  const c = cotizaciones.find(x=>x.id===id); if(!c) return;
+  const versiones = versionsOfGrupo(c.grupoId||c.id);
+  const maxV = Math.max(...versiones.map(v=>Number(v.version)));
+  const items = itemsOf(c.id).map(i=> Object.assign({}, i, { id: uid() }));
+  draft = { id:null, numero:c.numero, grupoId:(c.grupoId||c.id), version:maxV+1, clienteId:c.clienteId||"", cliente:c.cliente, proyectoNombre:c.proyectoNombre,
+    fecha:new Date().toISOString().slice(0,10), validoHasta:c.validoHasta, margenDefaultPct:c.margenDefaultPct||30,
+    notas:c.notas, items, baseId:null };
+  itemFormOpen = false; clienteFormOpen = false; renderTab();
+  showToast("Editando nueva versión v" + draft.version + " — la anterior no se modifica");
+}
+function verCotizacion(id){
+  const c = cotizaciones.find(x=>x.id===id); if(!c) return;
+  const items = itemsOf(c.id).map(i=> Object.assign({}, i));
+  draft = { id:c.id, numero:c.numero, grupoId:(c.grupoId||c.id), version:c.version, clienteId:c.clienteId||"", cliente:c.cliente, proyectoNombre:c.proyectoNombre,
+    fecha:c.fecha, validoHasta:c.validoHasta, margenDefaultPct:c.margenDefaultPct||30, notas:c.notas, items,
+    baseId:c.id, estadoActual:c.estado };
+  itemFormOpen = false; clienteFormOpen = false; renderTab();
+}
+function cerrarDraft(){ draft = null; itemFormOpen = false; renderTab(); }
+
+function renderDraftEditor(){
+  const t = { totalCosto: draft.items.reduce((s,i)=>s+Number(i.totalCosto),0), totalVenta: draft.items.reduce((s,i)=>s+Number(i.totalVenta),0) };
+  const rent = t.totalVenta - t.totalCosto;
+  const itbms = t.totalVenta * ITBMS_RATE;
+  const totalConImpuesto = t.totalVenta + itbms;
+  const readonly = draft.baseId && draft.estadoActual && draft.estadoActual!=='Borrador';
+  return `
+    <div class="list-head">
+      <h2>${draft.baseId ? (draft.numero||'Cotización')+' · v'+draft.version : 'Nueva cotización'}</h2>
+      <button class="btn btn-ghost btn-sm" onclick="cerrarDraft()">✕ Cerrar</button>
+    </div>
+    <div class="card">
+      <div class="section-title">Datos del cliente / proyecto</div>
+      <div class="field">
+        <label>Cliente</label>
+        <select id="d-clienteId" ${readonly?'disabled':''} onchange="onClienteSelectChange()">
+          <option value="">— Selecciona un cliente —</option>
+          ${clientes.map(c=>`<option value="${c.id}" ${c.id===draft.clienteId?'selected':''}>${escapeHtml(c.nombre)} (${c.id})</option>`).join("")}
+          <option value="__nuevo__">+ Nuevo cliente…</option>
+        </select>
+        ${!readonly ? `<div id="d-cliente-nuevo-panel" style="display:${clienteFormOpen?'block':'none'};margin-top:8px;" class="catalog-mini">
+          <div class="field" style="margin-bottom:6px;"><input type="text" id="d-cliente-nombre-nuevo" placeholder="Nombre del cliente nuevo"></div>
+          <button class="btn btn-ghost btn-sm" onclick="crearClienteInline()">Guardar cliente</button>
+        </div>` : ''}
+      </div>
+      <div class="field"><label>Nombre del proyecto</label><input type="text" id="d-proyectoNombre" value="${escapeHtml(draft.proyectoNombre)}" ${readonly?'disabled':''} placeholder="Ej. Torre Marbella"></div>
+      <div class="field-row">
+        <div class="field"><label>Fecha</label><input type="date" id="d-fecha" value="${draft.fecha||''}" ${readonly?'disabled':''}></div>
+        <div class="field"><label>Válido hasta</label><input type="date" id="d-validoHasta" value="${draft.validoHasta||''}" ${readonly?'disabled':''}></div>
+      </div>
+      <div class="field"><label>Margen sugerido por defecto %</label><input type="number" step="0.1" id="d-margenDefault" value="${draft.margenDefaultPct}" ${readonly?'disabled':''}></div>
+      <div class="field"><label>Notas (opcional)</label><textarea id="d-notas" ${readonly?'disabled':''}>${escapeHtml(draft.notas||'')}</textarea></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Líneas de la cotización <span class="tag">${draft.items.length}</span></div>
+      ${!readonly ? `<button class="btn btn-ghost btn-block btn-sm" style="margin-bottom:10px;" onclick="toggleItemForm()">${itemFormOpen?'✕ Cerrar':'+ Agregar línea'}</button>` : ''}
+      ${itemFormOpen && !readonly ? renderItemForm() : ''}
+      ${draft.items.length===0 ? '<div class="empty-note">Aún no hay líneas agregadas.</div>' :
+        draft.items.map((it,idx)=>`
+        <div class="item-row">
+          <div>
+            <div class="ir-desc">${escapeHtml(it.desc)} ${it.nivel?`<span class="chip chip-cat">Nv.${escapeHtml(it.nivel)}</span>`:''}</div>
+            <div class="ir-sub">${escapeHtml(CATEGORIA_LABELS[it.categoria]||it.categoria)} · ${it.cantidad} ${escapeHtml(it.unidad)} × ${fmtMoney(it.precioVentaUnit)}</div>
+            ${(it.numeroSerie||it.ubicacionInstalacion) ? `<div class="ir-sub">${it.numeroSerie?`S/N ${escapeHtml(it.numeroSerie)}`:''}${it.numeroSerie&&it.ubicacionInstalacion?' · ':''}${it.ubicacionInstalacion?escapeHtml(it.ubicacionInstalacion):''}</div>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="ir-total">${fmtMoney(it.totalVenta)}</div>
+            ${!readonly ? `<button class="btn btn-ghost btn-sm" onclick="editarItemLinea(${idx})">Editar</button><button class="btn-del" onclick="quitarItem(${idx})">🗑</button>` : ''}
+          </div>
+        </div>`).join("")}
+      <div class="totals-box">
+        <div class="tl"><span>Subtotal (venta)</span><span>${fmtMoney(t.totalVenta)}</span></div>
+        <div class="tl"><span>ITBMS (7%)</span><span>${fmtMoney(itbms)}</span></div>
+        <div class="tl" style="font-weight:700;"><span>Total con ITBMS</span><span>${fmtMoney(totalConImpuesto)}</span></div>
+        <div style="border-top:1px dashed var(--line);margin:7px 0;"></div>
+        <div class="tl" style="color:var(--steel-soft);"><span>Total costo (uso interno)</span><span>${fmtMoney(t.totalCosto)}</span></div>
+        <div class="tl" style="color:${rent>=0?'var(--verde)':'var(--rojo)'};font-weight:700;"><span>Rentabilidad (uso interno)</span><span>${fmtMoney(rent)} (${fmtPct(t.totalVenta>0?rent/t.totalVenta*100:0)})</span></div>
+      </div>
+    </div>
+
+    ${!readonly ? `
+    <div class="form-actions">
+      <button class="btn btn-primary btn-block" id="guardar-cotizacion-btn" onclick="guardarCotizacion()">${draft.baseId ? 'Guardar cambios' : 'Guardar cotización (Borrador)'}</button>
+    </div>` : `<div class="empty-note">Esta versión está "${draft.estadoActual}" — usa "Nueva versión" en la lista para modificarla.</div>`}
+  `;
+}
+function toggleItemForm(){ itemFormOpen = !itemFormOpen; editingItemIndex = null; renderTab(); if(itemFormOpen) setTimeout(onOrigenChange, 0); }
+function onClienteSelectChange(){
+  const val = document.getElementById("d-clienteId").value;
+  if(val==='__nuevo__'){
+    clienteFormOpen = true;
+    document.getElementById("d-cliente-nuevo-panel").style.display = 'block';
+  }
+}
+async function crearClienteInline(){
+  const nombre = document.getElementById("d-cliente-nombre-nuevo").value.trim();
+  if(!nombre){ showToast("Escribe el nombre del cliente"); return; }
+  const rec = {
+    id: 'CLI-' + String(clientes.length+1).padStart(4,'0'),
+    nombre, telefono:"", correo:"", contacto:"", notas:"",
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const r = await apiAdd("clientes", rec);
+  if(r.ok){
+    clientes.push(rec);
+    draft.clienteId = rec.id;
+    clienteFormOpen = false;
+    showToast("Cliente creado: " + rec.id);
+    renderTab();
+  }else{
+    showToast("No se pudo crear el cliente (sin conexión).");
+  }
+}
+function renderItemForm(){
+  return `
+    <div class="form-panel open" style="margin-bottom:12px;">
+      <div class="field"><label>Origen</label>
+        <select id="it-origen" onchange="onOrigenChange()">
+          <option value="EQUIPO">Catálogo · Equipo</option>
+          <option value="MATERIAL">Catálogo · Material</option>
+          <option value="MANO_OBRA">Catálogo · Mano de obra</option>
+          <option value="LIBRE">Línea libre (manual)</option>
+        </select>
+      </div>
+      <div id="it-catalogo-select"></div>
+      <div class="field-row3">
+        <div class="field"><label>Nivel (opcional)</label><input type="text" id="it-nivel" placeholder="Ej. Nivel 100"></div>
+        <div class="field"><label>Cantidad</label><input type="number" step="0.01" id="it-cantidad" value="1" oninput="recalcItemPreview()"></div>
+        <div class="field"><label>Margen %</label><input type="number" step="0.1" id="it-margen" value="${draft.margenDefaultPct}" oninput="recalcItemPreview()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Costo unitario</label><input type="number" step="0.01" id="it-costo" placeholder="0.00" oninput="recalcItemPreview()"></div>
+        <div class="field"><label>Precio venta unitario</label><input type="number" step="0.01" id="it-precioVenta" placeholder="0.00"></div>
+      </div>
+      <div class="catalog-mini" id="it-preview">Total venta: B/. 0.00</div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-block" onclick="agregarItem()">${editingItemIndex!==null?'Guardar cambios':'Agregar a la cotización'}</button>
+        ${editingItemIndex!==null?'<button class="btn btn-ghost btn-block" onclick="cancelarEdicionItem()">Cancelar</button>':''}
+      </div>
+    </div>
+  `;
+}
+function onOrigenChange(){
+  itemOrigen = document.getElementById("it-origen").value;
+  const cont = document.getElementById("it-catalogo-select");
+  if(itemOrigen==='EQUIPO'){
+    cont.innerHTML = `<div class="field"><label>Equipo</label><select id="it-catId" onchange="autofillItem()">
+      <option value="">— Selecciona —</option>
+      ${catalogoEquipos.map(e=>`<option value="${e.id}">${escapeHtml(e.marca)} ${e.capacidadBTU}BTU · ${escapeHtml(e.tipoSistema)}</option>`).join("")}
+    </select></div>
+    <div class="field"><label>Descripción</label><input type="text" id="it-desc" placeholder="Ej. Unidad VRF 24000 BTU"></div>
+    <div class="field"><label>Unidad</label><input type="text" id="it-unidad" value="UND"></div>
+    <div class="field-row">
+      <div class="field"><label>N° de serie (opcional)</label><input type="text" id="it-serie" placeholder="Se puede llenar después"></div>
+      <div class="field"><label>Ubicación de instalación (opcional)</label><input type="text" id="it-ubicacion" placeholder="Ej. Cuarto principal, nivel 2"></div>
+    </div>`;
+  }else if(itemOrigen==='MATERIAL'){
+    cont.innerHTML = `<div class="field"><label>Material</label><select id="it-catId" onchange="autofillItem()">
+      <option value="">— Selecciona —</option>
+      ${catalogoMateriales.map(m=>`<option value="${m.id}">${escapeHtml(m.desc)} (${escapeHtml(CATEGORIA_LABELS[m.categoria]||m.categoria)})</option>`).join("")}
+    </select></div>
+    <div class="field"><label>Descripción</label><input type="text" id="it-desc"></div>
+    <div class="field"><label>Unidad</label><input type="text" id="it-unidad" value="SG"></div>`;
+  }else if(itemOrigen==='MANO_OBRA'){
+    cont.innerHTML = `<div class="field"><label>Partida de mano de obra</label><select id="it-catId" onchange="autofillItem()">
+      <option value="">— Selecciona —</option>
+      ${catalogoManoObra.map(m=>`<option value="${m.id}">${escapeHtml(m.desc)} (${escapeHtml(CATEGORIA_LABELS[m.categoria]||m.categoria)})</option>`).join("")}
+    </select></div>
+    <div class="field"><label>Descripción</label><input type="text" id="it-desc"></div>
+    <div class="field"><label>Unidad</label><input type="text" id="it-unidad" value="SG"></div>`;
+  }else{
+    cont.innerHTML = `<div class="field"><label>Categoría</label><select id="it-categoriaLibre" onchange="toggleGuardarCatalogoExtra()">
+      ${MAT_CATEGORIA_OPTS.concat(MAO_CATEGORIA_OPTS).concat(['SUM-EQP','VIA']).map(o=>`<option value="${o}">${escapeHtml(CATEGORIA_LABELS[o]||o)}</option>`).join("")}
+    </select></div>
+    <div class="field"><label>Descripción</label><input type="text" id="it-desc" placeholder="Descripción de la línea"></div>
+    <div class="field"><label>Unidad</label><input type="text" id="it-unidad" value="SG"></div>
+    <div class="field" id="it-guardar-catalogo-row" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="it-guardarCatalogo" onchange="toggleGuardarCatalogoExtra()" style="width:auto;">
+      <label style="margin:0;text-transform:none;font-size:12.5px;">Guardar también en el catálogo (para reusar después)</label>
+    </div>
+    <div id="it-guardar-catalogo-extra"></div>`;
+  }
+  recalcItemPreview();
+}
+function toggleGuardarCatalogoExtra(){
+  const chk = document.getElementById("it-guardarCatalogo");
+  const cont = document.getElementById("it-guardar-catalogo-extra");
+  const row = document.getElementById("it-guardar-catalogo-row");
+  if(!chk || !cont) return;
+  const cat = document.getElementById("it-categoriaLibre").value;
+  if(cat==='VIA'){
+    // Viáticos no tiene catálogo propio — la línea se registra directo, sin opción de guardarla.
+    if(row) row.style.display = "none";
+    chk.checked = false;
+    cont.innerHTML = "";
+    return;
+  }
+  if(row) row.style.display = "";
+  if(!chk.checked){ cont.innerHTML = ""; return; }
+  if(cat==='SUM-EQP'){
+    cont.innerHTML = `
+      <div class="catalog-mini" style="margin-top:6px;margin-bottom:8px;">Para guardarlo en el catálogo de Equipos, completa esto (costo y margen ya los tienes arriba):</div>
+      <div class="field"><label>Tipo de sistema</label><select id="it-cat-tipoSistema">${TIPO_SISTEMA_OPTS.map(o=>`<option>${o}</option>`).join("")}</select></div>
+      <div class="field-row">
+        <div class="field"><label>Marca</label><input type="text" id="it-cat-marca" placeholder="Ej. Trane"></div>
+        <div class="field"><label>Capacidad (BTU)</label><input type="number" id="it-cat-btu" placeholder="Ej. 24000"></div>
+      </div>
+      <div class="field"><label>Tipo de unidad</label><select id="it-cat-tipoUnidad">${TIPO_UNIDAD_OPTS.map(o=>`<option>${o}</option>`).join("")}</select></div>
+    `;
+  }else{
+    cont.innerHTML = `<div class="catalog-mini" style="margin-top:6px;">Se guardará con la descripción, unidad, costo y margen que ya capturaste arriba.</div>`;
+  }
+}
+function autofillItem(){
+  const catId = document.getElementById("it-catId").value;
+  let item;
+  if(itemOrigen==='EQUIPO') item = catalogoEquipos.find(e=>e.id===catId);
+  else if(itemOrigen==='MATERIAL') item = catalogoMateriales.find(m=>m.id===catId);
+  else item = catalogoManoObra.find(m=>m.id===catId);
+  if(!item) return;
+  if(item.costo!==""&&item.costo!==undefined&&item.costo!==null){
+    document.getElementById("it-costo").value = item.costo;
+  }else{
+    document.getElementById("it-costo").value = "";
+    showToast("Este ítem no tiene costo guardado — escríbelo para esta cotización");
+  }
+  document.getElementById("it-margen").value = item.margenPct;
+  if(document.getElementById("it-desc").value.trim()===""){
+    document.getElementById("it-desc").value = itemOrigen==='EQUIPO' ? `${item.marca} ${item.capacidadBTU}BTU (${item.tipoUnidad})` : item.desc;
+  }
+  if(itemOrigen!=='EQUIPO') document.getElementById("it-unidad").value = item.unidad || 'SG';
+  recalcItemPreview();
+}
+function recalcItemPreview(){
+  const costoEl = document.getElementById("it-costo"); if(!costoEl) return;
+  const costo = parseFloat(costoEl.value)||0;
+  const margen = parseFloat(document.getElementById("it-margen").value)||0;
+  const cantidad = parseFloat(document.getElementById("it-cantidad").value)||0;
+  const ventaUnit = calcVentaUnit(costo, margen);
+  document.getElementById("it-precioVenta").value = ventaUnit.toFixed(2);
+  document.getElementById("it-preview").textContent = `Total costo: ${fmtMoney(costo*cantidad)} · Total venta: ${fmtMoney(ventaUnit*cantidad)}`;
+}
+async function agregarItem(){
+  const desc = document.getElementById("it-desc").value.trim();
+  const cantidad = parseFloat(document.getElementById("it-cantidad").value)||0;
+  const costoUnit = parseFloat(document.getElementById("it-costo").value)||0;
+  const margenPct = parseFloat(document.getElementById("it-margen").value)||0;
+  const precioVentaUnit = parseFloat(document.getElementById("it-precioVenta").value) || calcVentaUnit(costoUnit,margenPct);
+  const unidad = document.getElementById("it-unidad").value.trim() || 'SG';
+  const nivel = document.getElementById("it-nivel").value.trim();
+  if(!desc || cantidad<=0 || costoUnit<=0){ showToast("Completa descripción, cantidad y costo"); return; }
+  let categoria, origenId="";
+  if(itemOrigen==='EQUIPO'){ categoria='SUM-EQP'; origenId=document.getElementById("it-catId").value; }
+  else if(itemOrigen==='MATERIAL'){ const c=catalogoMateriales.find(m=>m.id===document.getElementById("it-catId").value); categoria = c?c.categoria:'SUM-MAT'; origenId=document.getElementById("it-catId").value; }
+  else if(itemOrigen==='MANO_OBRA'){ const c=catalogoManoObra.find(m=>m.id===document.getElementById("it-catId").value); categoria = c?c.categoria:'MAO-INS'; origenId=document.getElementById("it-catId").value; }
+  else{ categoria = document.getElementById("it-categoriaLibre").value; }
+  const numeroSerie = itemOrigen==='EQUIPO' ? document.getElementById("it-serie").value.trim() : "";
+  const ubicacionInstalacion = itemOrigen==='EQUIPO' ? document.getElementById("it-ubicacion").value.trim() : "";
+
+  // Línea libre: guardar también en el catálogo correspondiente, si se marcó
+  if(itemOrigen==='LIBRE'){
+    const guardarChk = document.getElementById("it-guardarCatalogo");
+    if(guardarChk && guardarChk.checked){
+      if(categoria==='SUM-EQP'){
+        const marca = document.getElementById("it-cat-marca").value.trim();
+        if(!marca){
+          showToast("Para guardar en el catálogo de Equipos, escribe al menos la marca");
+        }else{
+          const rec = {
+            id: uid(), tipoSistema: document.getElementById("it-cat-tipoSistema").value, marca,
+            capacidadBTU: parseFloat(document.getElementById("it-cat-btu").value)||0,
+            tipoUnidad: document.getElementById("it-cat-tipoUnidad").value,
+            costo: costoUnit, margenPct, notas: ""
+          };
+          const r = await apiAdd('catalogoEquipos', rec);
+          if(r.ok){ catalogoEquipos.push(rec); showToast("Guardado también en Catálogo · Equipos"); }
+        }
+      }else if(categoria.indexOf('SUM-')===0){
+        const rec = { id: uid(), categoria, desc, unidad, costo: costoUnit, margenPct };
+        const r = await apiAdd('catalogoMateriales', rec);
+        if(r.ok){ catalogoMateriales.push(rec); showToast("Guardado también en Catálogo · Materiales"); }
+      }else if(categoria.indexOf('MAO-')===0){
+        const rec = { id: uid(), categoria, desc, unidad, costo: costoUnit, margenPct };
+        const r = await apiAdd('catalogoManoObra', rec);
+        if(r.ok){ catalogoManoObra.push(rec); showToast("Guardado también en Catálogo · Mano de Obra"); }
+      }
+    }
+  }
+
+  const itemData = {
+    categoria, nivel, desc, unidad, cantidad, costoUnit, margenPct,
+    precioVentaUnit, totalCosto:+(cantidad*costoUnit).toFixed(2), totalVenta:+(cantidad*precioVentaUnit).toFixed(2),
+    origenTipo: itemOrigen, origenId, numeroSerie, ubicacionInstalacion
+  };
+  if(editingItemIndex!==null){
+    const existing = draft.items[editingItemIndex];
+    draft.items[editingItemIndex] = Object.assign({}, existing, itemData);
+    editingItemIndex = null;
+  }else{
+    draft.items.push(Object.assign({ id: uid(), cotizacionId: draft.id || null }, itemData));
+  }
+  itemFormOpen = false; renderTab();
+}
+function cancelarEdicionItem(){ editingItemIndex = null; itemFormOpen = false; renderTab(); }
+function editarItemLinea(idx){
+  const it = draft.items[idx];
+  editingItemIndex = idx;
+  itemOrigen = it.origenTipo;
+  itemFormOpen = true;
+  renderTab();
+  setTimeout(()=>{
+    document.getElementById("it-origen").value = itemOrigen;
+    onOrigenChange();
+    if(itemOrigen==='EQUIPO'||itemOrigen==='MATERIAL'||itemOrigen==='MANO_OBRA'){
+      const sel = document.getElementById("it-catId");
+      if(sel) sel.value = it.origenId||'';
+    }else{
+      const sel = document.getElementById("it-categoriaLibre");
+      if(sel) sel.value = it.categoria;
+    }
+    document.getElementById("it-desc").value = it.desc;
+    document.getElementById("it-unidad").value = it.unidad;
+    document.getElementById("it-nivel").value = it.nivel||'';
+    document.getElementById("it-cantidad").value = it.cantidad;
+    document.getElementById("it-margen").value = it.margenPct;
+    document.getElementById("it-costo").value = it.costoUnit;
+    document.getElementById("it-precioVenta").value = it.precioVentaUnit;
+    if(itemOrigen==='EQUIPO'){
+      document.getElementById("it-serie").value = it.numeroSerie||'';
+      document.getElementById("it-ubicacion").value = it.ubicacionInstalacion||'';
+    }
+    recalcItemPreview();
+  }, 0);
+}
+function quitarItem(idx){ draft.items.splice(idx,1); renderTab(); }
+
+async function guardarCotizacion(){
+  const clienteId = document.getElementById("d-clienteId").value;
+  const proyectoNombre = document.getElementById("d-proyectoNombre").value.trim();
+  if(!clienteId || clienteId==='__nuevo__'){ showToast("Selecciona o crea un cliente"); return; }
+  if(!proyectoNombre){ showToast("Escribe el nombre del proyecto"); return; }
+  if(draft.items.length===0){ showToast("Agrega al menos una línea"); return; }
+  const clienteObj = clientes.find(c=>c.id===clienteId);
+  const cliente = clienteObj ? clienteObj.nombre : "";
+  const btn = document.getElementById("guardar-cotizacion-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+
+  const header = {
+    clienteId, cliente, proyectoNombre,
+    fecha: document.getElementById("d-fecha").value,
+    validoHasta: document.getElementById("d-validoHasta").value,
+    margenDefaultPct: parseFloat(document.getElementById("d-margenDefault").value)||0,
+    notas: document.getElementById("d-notas").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+
+  if(draft.baseId){
+    // Editar Borrador existente: actualizar encabezado, borrar items previos y volver a insertar
+    const original = cotizaciones.find(c=>c.id===draft.baseId);
+    const rec = Object.assign({}, original, header, { id: draft.baseId, grupoId: draft.grupoId, version: draft.version, estado: original.estado, proyectoIdActivado: original.proyectoIdActivado||'' });
+    const r1 = await apiUpdate('cotizaciones', draft.baseId, rec);
+    if(!r1.ok){ btn.disabled=false; btn.textContent="Guardar cambios"; showToast("No se pudo guardar (sin conexión)."); return; }
+    const previos = itemsOf(draft.baseId);
+    for(const p of previos){ await apiDelete('cotizacionItems', p.id); }
+    for(const it of draft.items){
+      const itemRec = Object.assign({}, it, { cotizacionId: draft.baseId });
+      await apiAdd('cotizacionItems', itemRec);
+    }
+    showToast("Cambios guardados");
+  } else {
+    const newId = uid();
+    const grupoId = draft.grupoId || newId;
+    let numero = draft.numero;
+    if(!numero){
+      const gruposExistentes = new Set(cotizaciones.map(c=>c.grupoId||c.id)).size;
+      numero = 'COT-' + String(gruposExistentes+1).padStart(4,'0');
+    }
+    const rec = Object.assign({ id:newId, numero, grupoId, version:draft.version, estado:'Borrador', proyectoIdActivado:'' }, header);
+    const r1 = await apiAdd('cotizaciones', rec);
+    if(!r1.ok){ btn.disabled=false; btn.textContent="Guardar cotización (Borrador)"; showToast("No se pudo guardar (sin conexión)."); return; }
+    for(const it of draft.items){
+      const itemRec = Object.assign({}, it, { id:uid(), cotizacionId:newId });
+      await apiAdd('cotizacionItems', itemRec);
+    }
+    showToast("Cotización " + numero + " guardada como Borrador v" + draft.version);
+  }
+  draft = null; itemFormOpen = false;
+  await refreshAll(true);
+}
+
+/* ---------- PROPUESTA IMPRIMIBLE ---------- */
+function exportarPropuesta(cotizacionId){
+  const c = cotizaciones.find(x=>x.id===cotizacionId); if(!c) return;
+  const items = itemsOf(cotizacionId);
+  const t = totalsOf(cotizacionId);
+  const html = `
+    <div class="prop-header">
+      <div>
+        <div class="prop-logo">${LOGO_SVG}</div>
+        <div class="prop-contact">${escapeHtml(EMPRESA.direccion)}<br>Tel. ${escapeHtml(EMPRESA.telefono)} · ${escapeHtml(EMPRESA.correo)}<br>RUC ${escapeHtml(EMPRESA.ruc)} · ${escapeHtml(EMPRESA.web)}</div>
+      </div>
+      <div class="prop-meta">Cotización ${escapeHtml(c.numero||c.id)}<br>Fecha: ${c.fecha||'—'}<br>Válido hasta: ${c.validoHasta||'—'}<br>Versión ${c.version}</div>
+    </div>
+    <div class="prop-block">
+      <h4>Cliente / Proyecto</h4>
+      <p style="margin:0;"><strong>${escapeHtml(c.cliente)}</strong><br>${escapeHtml(c.proyectoNombre)}</p>
+    </div>
+    <div class="prop-block">
+      <h4>Detalle</h4>
+      <table class="prop-table">
+        <thead><tr><th>Descripción</th><th>Nivel</th><th>Unidad</th><th>Cant.</th><th>P. Unit.</th><th>Total</th></tr></thead>
+        <tbody>
+          ${items.map(it=>`<tr><td>${escapeHtml(it.desc)}</td><td>${escapeHtml(it.nivel||'—')}</td><td>${escapeHtml(it.unidad)}</td><td class="num">${it.cantidad}</td><td class="num">${fmtMoney(it.precioVentaUnit)}</td><td class="num">${fmtMoney(it.totalVenta)}</td></tr>`).join("")}
+          <tr><td colspan="5">Subtotal</td><td class="num">${fmtMoney(t.totalVenta)}</td></tr>
+          <tr><td colspan="5">ITBMS (7%)</td><td class="num">${fmtMoney(t.totalVenta*ITBMS_RATE)}</td></tr>
+          <tr class="prop-total-row"><td colspan="5">TOTAL</td><td class="num">${fmtMoney(t.totalVenta*(1+ITBMS_RATE))}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    ${c.notas ? `<div class="prop-block"><h4>Notas</h4><p style="margin:0;">${escapeHtml(c.notas)}</p></div>` : ''}
+    <div class="prop-footer">Propuesta generada por Easy Project, S.A. · Precios en balboas (B/.) · Sujeto a cambios sin previo aviso hasta la fecha de vigencia indicada.</div>
+  `;
+  document.getElementById("printView").innerHTML = html;
+  window.print();
+}
+
+init();
+</script>
+</body>
+</html>
