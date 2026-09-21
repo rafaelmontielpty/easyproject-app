@@ -1,0 +1,218 @@
+<!--
+  MÓDULO VIÁTICOS — pestaña para control-de-gastos.html (v2, corregida)
+  Ajustada al Code.gs real: protocolo JSONP (doGet con &callback=),
+  altas/ediciones/borrados genéricos vía action=add|update|delete&table=viaticos,
+  y el reporte PDF via la función especial exportarReporteViaticosPdf (que
+  devuelve base64, no una URL).
+  Ajusta las clases CSS (.card, .btn, .table, etc.) a las que ya uses.
+-->
+
+<section id="tab-viaticos" class="tab-panel">
+  <h3>Viáticos</h3>
+
+  <form id="form-viatico" class="card">
+    <div class="form-row">
+      <label>Fecha</label>
+      <input type="date" id="via-fecha" required>
+    </div>
+    <div class="form-row">
+      <label>Técnico</label>
+      <input type="text" id="via-tecnico" required>
+    </div>
+    <div class="form-row">
+      <label>Concepto</label>
+      <select id="via-concepto" required>
+        <option value="Transporte">Transporte</option>
+        <option value="Alimentación">Alimentación</option>
+        <option value="Hospedaje">Hospedaje</option>
+        <option value="Peaje">Peaje</option>
+        <option value="Otro">Otro</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Descripción</label>
+      <input type="text" id="via-descripcion" placeholder="Detalle del gasto">
+    </div>
+    <div class="form-row">
+      <label>Método de pago</label>
+      <select id="via-metodoPago" required>
+        <option value="Efectivo">Efectivo (caja chica)</option>
+        <option value="Tarjeta">Tarjeta</option>
+        <option value="Pago directo">Pago directo</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Monto (neto)</label>
+      <input type="number" id="via-monto" step="0.01" min="0" required>
+    </div>
+    <div class="form-row form-row-inline">
+      <label><input type="checkbox" id="via-tieneFactura"> Tiene factura (aplica ITBMS 7%)</label>
+    </div>
+    <div class="form-row" id="via-numeroFiscal-wrap" style="display:none;">
+      <label>N° fiscal</label>
+      <input type="text" id="via-numeroFiscal">
+    </div>
+
+    <p class="preview">Total: <span id="via-preview-total">$0.00</span></p>
+
+    <button type="submit" class="btn">Registrar viático</button>
+  </form>
+
+  <table class="table" id="tabla-viaticos">
+    <thead>
+      <tr>
+        <th>Fecha</th><th>Técnico</th><th>Concepto</th><th>Método</th>
+        <th>Monto</th><th>Factura</th><th>Total</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="tabla-viaticos-body"></tbody>
+  </table>
+
+  <div class="totales">
+    <span>Total con factura: <b id="via-total-con-factura">$0.00</b></span>
+    <span>Total sin factura: <b id="via-total-sin-factura">$0.00</b></span>
+    <span>Total general: <b id="via-total-general">$0.00</b></span>
+  </div>
+
+  <button class="btn btn-secondary" id="btn-exportar-viaticos-pdf">Exportar reporte PDF</button>
+</section>
+
+<script>
+  // ---------------------------------------------------------------------
+  // Si el archivo ya tiene un helper JSONP (p.ej. usado por Compras/ManoObra),
+  // usa ESE en vez de este — este se incluye solo por si hace falta.
+  // API_URL debe apuntar al mismo /exec ya usado en el resto del sitio.
+  // ---------------------------------------------------------------------
+  function jsonpCall(params) {
+    return new Promise(function (resolve, reject) {
+      var callbackName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+      window[callbackName] = function (data) {
+        delete window[callbackName];
+        script.remove();
+        resolve(data);
+      };
+      var query = Object.keys(params).map(function (k) {
+        var v = params[k];
+        var raw = (typeof v === 'object') ? JSON.stringify(v) : v;
+        return encodeURIComponent(k) + '=' + encodeURIComponent(raw);
+      }).join('&');
+      var script = document.createElement('script');
+      script.src = API_URL + '?' + query + '&callback=' + callbackName;
+      script.onerror = function () { delete window[callbackName]; reject(new Error('Error de red')); };
+      document.body.appendChild(script);
+    });
+  }
+
+  function nuevoIdViatico() {
+    if (window.crypto && crypto.randomUUID) return 'VIA-' + crypto.randomUUID().slice(0, 8);
+    return 'VIA-' + Date.now().toString(36);
+  }
+
+  function calcularViatico(monto, tieneFactura) {
+    monto = Number(monto) || 0;
+    var itbms = tieneFactura ? Math.round(monto * 0.07 * 100) / 100 : 0;
+    var total = Math.round((monto + itbms) * 100) / 100;
+    return { itbms: itbms, total: total };
+  }
+
+  function actualizarPreviewViatico() {
+    var monto = document.getElementById('via-monto').value;
+    var conFactura = document.getElementById('via-tieneFactura').checked;
+    var calc = calcularViatico(monto, conFactura);
+    document.getElementById('via-preview-total').textContent = '$' + calc.total.toFixed(2);
+  }
+
+  document.getElementById('via-monto').addEventListener('input', actualizarPreviewViatico);
+  document.getElementById('via-tieneFactura').addEventListener('change', function () {
+    document.getElementById('via-numeroFiscal-wrap').style.display = this.checked ? 'block' : 'none';
+    actualizarPreviewViatico();
+  });
+
+  document.getElementById('form-viatico').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var monto = document.getElementById('via-monto').value;
+    var tieneFactura = document.getElementById('via-tieneFactura').checked;
+    var calc = calcularViatico(monto, tieneFactura);
+
+    var record = {
+      id: nuevoIdViatico(),
+      proyecto: proyectoActualId,                              // variable ya existente en el archivo
+      idPartida: idPartidaViaticosProyectoActual,               // Partida categoría VIA del proyecto activo
+      fecha: document.getElementById('via-fecha').value,
+      tecnico: document.getElementById('via-tecnico').value,
+      concepto: document.getElementById('via-concepto').value,
+      descripcion: document.getElementById('via-descripcion').value,
+      metodoPago: document.getElementById('via-metodoPago').value,
+      monto: Number(monto) || 0,
+      tieneFactura: tieneFactura ? 'Sí' : 'No',
+      itbms: calc.itbms,
+      total: calc.total,
+      numeroFiscal: document.getElementById('via-numeroFiscal').value,
+      registradoPor: usuarioActual,                              // variable ya existente en el archivo
+      timestamp: new Date().toISOString()
+    };
+
+    jsonpCall({ action: 'add', table: 'viaticos', record: record }).then(function (res) {
+      if (!res.ok) { alert(res.error || 'Error al guardar el viático'); return; }
+      cargarViaticosProyecto();
+      document.getElementById('form-viatico').reset();
+      actualizarPreviewViatico();
+    });
+  });
+
+  function cargarViaticosProyecto() {
+    // No hay listarViaticosProyecto_api dedicado: se usa el mismo getAll
+    // genérico que ya usa el resto del sitio y se filtra en el cliente.
+    // Si el archivo ya guarda todo en una variable global (ej. APP_DATA),
+    // reemplaza este jsonpCall por un filtro sobre APP_DATA.viaticos.
+    jsonpCall({ action: 'getAll' }).then(function (data) {
+      var viaticos = (data.viaticos || []).filter(function (v) {
+        return String(v.proyecto) === String(proyectoActualId);
+      });
+
+      var body = document.getElementById('tabla-viaticos-body');
+      body.innerHTML = '';
+      var totalConFactura = 0, totalSinFactura = 0;
+
+      viaticos.forEach(function (v) {
+        if (v.tieneFactura === 'Sí') totalConFactura += Number(v.total) || 0;
+        else totalSinFactura += Number(v.total) || 0;
+
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' + v.fecha + '</td>' +
+          '<td>' + v.tecnico + '</td>' +
+          '<td>' + v.concepto + '</td>' +
+          '<td>' + v.metodoPago + '</td>' +
+          '<td>$' + Number(v.monto).toFixed(2) + '</td>' +
+          '<td>' + v.tieneFactura + '</td>' +
+          '<td>$' + Number(v.total).toFixed(2) + '</td>' +
+          '<td><button class="btn-icon" onclick="eliminarViatico(\'' + v.id + '\')">Eliminar</button></td>';
+        body.appendChild(tr);
+      });
+
+      document.getElementById('via-total-con-factura').textContent = '$' + totalConFactura.toFixed(2);
+      document.getElementById('via-total-sin-factura').textContent = '$' + totalSinFactura.toFixed(2);
+      document.getElementById('via-total-general').textContent = '$' + (totalConFactura + totalSinFactura).toFixed(2);
+    });
+  }
+
+  function eliminarViatico(id) {
+    if (!confirm('¿Eliminar este viático?')) return;
+    jsonpCall({ action: 'delete', table: 'viaticos', id: id }).then(function (res) {
+      if (!res.ok) { alert(res.error || 'Error al eliminar'); return; }
+      cargarViaticosProyecto();
+    });
+  }
+
+  document.getElementById('btn-exportar-viaticos-pdf').addEventListener('click', function () {
+    jsonpCall({ action: 'exportarReporteViaticosPdf', proyectoId: proyectoActualId }).then(function (res) {
+      if (!res.ok) { alert(res.error || 'Error al generar el PDF'); return; }
+      // El backend devuelve base64, no una URL — se arma la descarga en el navegador.
+      var link = document.createElement('a');
+      link.href = 'data:application/pdf;base64,' + res.pdf.base64;
+      link.download = res.pdf.nombreArchivo;
+      link.click();
+    });
+  });
+</script>
