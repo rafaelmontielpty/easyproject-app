@@ -1,0 +1,2423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Control de Gastos · Easy Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paleta de marca real Easy Project: carbón + azul (tomados del logo) */
+    --ink:#444444; --ink-2:#5A5A5A; --steel:#5C5C5C; --steel-soft:#8F8F8F;
+    --paper:#EFF0F0; --card:#FFFFFF; --line:#E1E1E1;
+    --copper:#1181AB; --copper-soft:#DCEEF4;
+    --verde:#2F9E44; --verde-soft:#E4F6E7;
+    --amarillo:#B8790A; --amarillo-soft:#FCF0D8;
+    --rojo:#D33636; --rojo-soft:#FBE2E2;
+    --azul:#1181AB; --azul-soft:#DCEEF4;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink);font-family:'Inter',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .shell{
+    max-width:1200px;margin:0 auto;background:var(--paper);min-height:100vh;position:relative;
+    display:flex;flex-direction:column;
+    background-image:linear-gradient(var(--line) 1px, transparent 1px),linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:24px 24px;background-position:-1px -1px;
+  }
+  header.topbar{
+    background:var(--ink);color:#fff;padding:16px 18px 14px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:20;border-bottom:3px solid var(--copper);
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-logo-badge{background:#fff;border-radius:10px;padding:6px 10px;display:flex;align-items:center;flex-shrink:0;}
+  .brand-logo-badge svg{display:block;height:38px;width:auto;}
+  .brand-text h1{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0;font-weight:700;letter-spacing:.01em;}
+  .help-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;}
+  main{flex:1;padding:16px 14px 96px;}
+  .proyecto-bar{background:var(--ink-2);padding:8px 14px 10px;position:sticky;top:65px;z-index:19;border-bottom:1px solid #223349;}
+  .proyecto-pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;padding:7px 14px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;}
+  .proyecto-opcion{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer;gap:8px;}
+  .proyecto-opcion:last-child{border-bottom:none;}
+  .proyecto-opcion .po-name{font-weight:700;font-size:14.5px;}
+  .proyecto-opcion .po-sub{font-size:11.5px;color:var(--steel-soft);margin-top:2px;}
+  .proyecto-opcion.selected{color:var(--copper);}
+  .proyecto-opcion .check{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;}
+  .proyecto-opcion.selected .check{background:var(--copper);border-color:var(--copper);}
+  .proyecto-tag{font-size:9.5px;font-family:'IBM Plex Mono',monospace;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--copper-soft);color:var(--copper);text-transform:uppercase;}
+  .estado-tag{font-size:9.5px;font-family:'IBM Plex Mono',monospace;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;}
+  .estado-activo{background:var(--verde-soft);color:var(--verde);}
+  .estado-culminado{background:var(--paper);color:var(--steel);}
+  .estado-archivado{background:var(--paper);color:var(--steel-soft);}
+  .proyecto-opcion.proyecto-archivado{opacity:.55;}
+  .toggle-estado-btn{background:none;border:1px solid var(--line);color:var(--steel);font-size:10.5px;padding:3px 8px;border-radius:20px;cursor:pointer;flex-shrink:0;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,27,45,.04);}
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--steel);margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .section-title .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--copper-soft);color:var(--copper);padding:2px 7px;border-radius:20px;font-weight:600;}
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 2px;}
+  .gauge-figure{width:100%;max-width:280px;}
+  .gauge-readout{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:34px;margin-top:-38px;color:var(--ink);}
+  .gauge-label{font-size:12px;color:var(--steel);margin-top:2px;text-align:center;}
+  .gauge-legend{display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--steel);}
+  .gauge-legend span{display:flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .ring-wrap{display:flex;flex-direction:column;align-items:center;padding:2px 0;}
+  .ring-figure{width:100%;max-width:150px;}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 12px 11px;}
+  .kpi .k-label{font-size:10.5px;color:var(--steel);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .kpi .k-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:18px;color:var(--ink);margin-top:4px;word-break:break-word;}
+  .kpi.accent{border-color:var(--copper);background:var(--copper-soft);}
+  .kpi.accent .k-value{color:#7a3f1f;}
+  .kpi.pos .k-value{color:var(--verde);}
+  .kpi.neg .k-value{color:var(--rojo);}
+  .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .mini{background:var(--paper);border-radius:9px;padding:10px 11px;}
+  .mini .m-label{font-size:9.5px;color:var(--steel-soft);text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+  .mini .m-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--ink);margin-top:4px;word-break:break-word;}
+  .mini .m-value.pos{color:var(--verde);}
+  .mini .m-value.neg{color:var(--rojo);}
+  .risk-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);gap:10px;}
+  .risk-row:last-child{border-bottom:none;}
+  .risk-id{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;}
+  .risk-cat{font-size:10.5px;color:var(--steel-soft);}
+  .semaforo{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .sem-verde{background:var(--verde);} .sem-amarillo{background:var(--amarillo);} .sem-rojo{background:var(--rojo);}
+  .pct-badge{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;}
+  .empty-note{color:var(--steel-soft);font-size:12.5px;text-align:center;padding:10px 0;}
+
+  /* ---- Dashboard corporativo (desktop) ---- */
+  .dash-hero{background:var(--ink);color:#fff;border-radius:var(--radius);padding:24px 28px;margin-bottom:16px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+  .dash-hero .section-title{color:#c7d0d6;margin-bottom:4px;}
+  .dash-hero .section-title .tag{background:rgba(255,255,255,.12);color:#dff0f6;}
+  .dash-hero .gauge-wrap{padding:0;flex:0 0 auto;}
+  .dash-hero .gauge-figure{max-width:210px;}
+  .dash-hero .gauge-readout{color:#fff;}
+  .dash-hero .gauge-label{color:#aebac1;}
+  .dash-hero .gauge-legend{color:#aebac1;}
+  .dash-hero-stats{display:flex;gap:28px;flex-wrap:wrap;flex:1;min-width:240px;}
+  .dash-hero-stat .hs-label{font-size:11px;color:#9fb0b8;text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .dash-hero-stat .hs-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:24px;color:#fff;margin-top:4px;}
+  .dash-hero-stat .hs-value.pos{color:#7fe0a0;}
+  .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:16px;}
+  .dash-grid .card{margin-bottom:0;height:100%;}
+  .dash-grid-full{grid-column:1 / -1;}
+  nav.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--ink);border-top:1px solid #223349;display:flex;justify-content:center;z-index:30;}
+  .tabbar-inner{max-width:1200px;width:100%;display:flex;}
+  .tab-btn{flex:1;background:none;border:none;color:#7C8CA0;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Inter',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;letter-spacing:.01em;}
+  .tab-btn svg{width:19px;height:19px;}
+  .tab-btn.active{color:#fff;background:var(--copper);border-radius:14px;margin:4px 3px;}
+  .tab-btn.active svg{stroke:#fff;}
+  .list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;}
+  .list-head h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0;}
+  .head-actions{display:flex;gap:6px;}
+  .btn{font-family:'Inter',sans-serif;font-weight:600;font-size:13px;border-radius:9px;padding:9px 14px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-copper{background:var(--copper);color:#fff;}
+  .btn-verde{background:var(--verde);color:#fff;}
+  .catalog-mini{font-size:11.5px;color:var(--steel);background:var(--paper);border-radius:8px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .subtabs{display:flex;gap:6px;margin-bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:4px;}
+  .subtab-btn{flex:1;border:none;background:transparent;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:600;color:var(--steel);cursor:pointer;}
+  .subtab-btn.active{background:var(--ink);color:#fff;}
+  .totals-box{background:var(--paper);border-radius:10px;padding:10px 12px;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .totals-box .tl{display:flex;justify-content:space-between;padding:3px 0;}
+  .version-pill{font-size:10px;font-family:'IBM Plex Mono',monospace;background:var(--paper);color:var(--steel);padding:2px 7px;border-radius:20px;font-weight:700;}
+  .item-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);gap:8px;}
+  .item-row:last-child{border-bottom:none;}
+  .item-row .ir-desc{font-size:12.5px;font-weight:600;}
+  .item-row .ir-sub{font-size:11px;color:var(--steel-soft);}
+  .item-row .ir-total{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;white-space:nowrap;}
+  .btn-ghost{background:transparent;color:var(--steel);border:1px solid var(--line);}
+  .btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;}
+  .btn-icon{padding:6px 9px;font-size:13px;border-radius:7px;}
+  .btn-block{width:100%;justify-content:center;}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .actions-row{display:flex;gap:8px;margin-bottom:14px;}
+  .form-panel{background:#FBFAF8;border:1px dashed var(--copper);border-radius:12px;padding:14px;margin-bottom:16px;display:none;}
+  .form-panel.open{display:block;}
+  .field{margin-bottom:11px;}
+  .field label{display:block;font-size:11.5px;font-weight:600;color:var(--steel);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em;}
+  .field input, .field select, .field textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--ink);}
+  .field textarea{resize:vertical;min-height:52px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .partida-info{margin-top:6px;font-size:11.5px;color:var(--steel);background:var(--paper);border-radius:8px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;}
+  .form-actions{display:flex;gap:8px;margin-top:14px;}
+  .record{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:9px;}
+  .record-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .btn-del{background:var(--rojo-soft);color:var(--rojo);border:none;width:26px;height:26px;border-radius:7px;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .btn-del:disabled{opacity:.5;}
+  .record-title{font-weight:600;font-size:13.5px;}
+  .record-sub{font-size:11.5px;color:var(--steel-soft);margin-top:1px;}
+  .record-total{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14.5px;white-space:nowrap;}
+  .record-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .chip{font-size:10.5px;padding:3px 8px;border-radius:20px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .chip-pend{background:var(--rojo-soft);color:var(--rojo);}
+  .chip-pag{background:var(--verde-soft);color:var(--verde);}
+  .chip-parcial{background:var(--amarillo-soft);color:var(--amarillo);}
+  .chip-cat{background:var(--paper);color:var(--steel);}
+  .search-box{margin-bottom:12px;}
+  .partida-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:8px;}
+  .partida-card .pt-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .partida-card .pt-id{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;}
+  .partida-card .pt-desc{font-size:12px;color:var(--steel);margin-top:2px;}
+  .bar-track{height:6px;background:var(--paper);border-radius:6px;margin-top:9px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;}
+  .pt-figures{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--steel);font-family:'IBM Plex Mono',monospace;}
+  .overlay{position:fixed;inset:0;background:rgba(15,27,45,.55);z-index:40;display:none;align-items:flex-end;justify-content:center;}
+  .overlay.open{display:flex;}
+  .sheet{background:#fff;max-width:640px;width:100%;border-radius:18px 18px 0 0;padding:20px 20px 26px;max-height:82vh;overflow-y:auto;}
+  .sheet h3{font-family:'Space Grotesk',sans-serif;margin:0 0 12px;font-size:17px;}
+  .sheet p, .sheet li{font-size:13.5px;line-height:1.55;color:var(--steel);}
+  .sheet ul{padding-left:18px;}
+  .sheet .close-x{float:right;background:var(--paper);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:15px;font-weight:700;color:var(--steel);}
+  .name-sheet .field{margin-bottom:14px;}
+  .loading{position:fixed;inset:0;background:var(--ink);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:10px;}
+  .loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.2);border-top-color:var(--copper);animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .loading span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9BB0C4;}
+  .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;opacity:0;transition:all .25s ease;z-index:60;pointer-events:none;font-weight:600;text-align:center;max-width:88%;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .footnote{font-size:11px;color:var(--steel-soft);text-align:center;margin-top:4px;line-height:1.5;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;position:relative;top:-1px;}
+  .sync-ok{background:var(--verde);}
+  .sync-err{background:var(--rojo);}
+  .sync-loading{background:var(--amarillo);animation:sp 1s linear infinite;}
+  /* SETUP GATE */
+  .setup-gate{min-height:100vh;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .setup-card{max-width:440px;background:var(--ink-2);border:1px solid #223349;border-radius:16px;padding:26px 22px;}
+  .setup-card h2{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0 0 10px;}
+  .setup-card p{font-size:13.5px;line-height:1.6;color:#B7C4D4;}
+  .setup-card code{background:#0A1420;padding:2px 6px;border-radius:5px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--copper);}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loadingScreen">
+  <div class="spin"></div>
+  <span>CONECTANDO CON GOOGLE SHEETS…</span>
+  <span style="font-size:10.5px;opacity:.7;max-width:220px;text-align:center;">La primera vez puede tardar hasta 30 segundos</span>
+</div>
+
+<div id="setupGate" style="display:none;">
+  <div class="setup-gate">
+    <div class="setup-card">
+      <h2>⚙️ Falta conectar Google Sheets</h2>
+      <p>Pega la URL de tu Apps Script (la misma que usa el Cotizador) en la línea <code>SHEETS_API_URL</code> al inicio del archivo.</p>
+    </div>
+  </div>
+</div>
+
+<div id="noProjectsGate" style="display:none;">
+  <div class="setup-gate">
+    <div class="setup-card">
+      <h2 id="noProjectsTitle">Aún no hay proyectos activos</h2>
+      <p id="noProjectsText">Este sistema ahora crea proyectos automáticamente cuando apruebas una cotización en el <strong>Cotizador</strong>. Si acabas de configurar el sistema por primera vez, corre la función <code>setupInicial()</code> desde el editor de Apps Script para sembrar SOLEIL y GUAPA con su catálogo histórico.</p>
+      <button class="btn btn-copper btn-block" style="margin-top:10px;" onclick="location.reload()">Reintentar</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell" id="appShell" style="display:none;">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo-badge" id="brandLogoSlot"></div>
+      <div class="brand-text">
+        <h1 id="appTitle">Control de Gastos</h1>
+      </div>
+    </div>
+    <button class="help-btn" onclick="toggleHelp(true)">?</button>
+  </header>
+  <div class="proyecto-bar">
+    <button class="proyecto-pill" onclick="toggleProyectoSelector(true)" id="proyectoPillBtn">
+      <span id="proyectoPillLabel">Proyecto</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+  </div>
+
+  <main id="content"></main>
+
+  <nav class="tabbar">
+    <div class="tabbar-inner" id="tabbar"></div>
+  </nav>
+</div>
+
+<div class="overlay" id="proyectoOverlay">
+  <div class="sheet">
+    <button class="close-x" onclick="toggleProyectoSelector(false)">✕</button>
+    <h3>Elegir proyecto</h3>
+    <div id="proyectoList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="helpOverlay">
+  <div class="sheet">
+    <button class="close-x" onclick="toggleHelp(false)">✕</button>
+    <h3>Guía rápida</h3>
+    <p><strong>Inicio</strong> muestra el estado financiero global del proyecto: venta, costo real, rentabilidad y el medidor de presupuesto consumido.</p>
+    <ul>
+      <li><strong>Compras</strong> — registra facturas de materiales por partida.</li>
+      <li><strong>M. de Obra</strong> — registra horas y costo de cuadrillas por partida.</li>
+      <li><strong>Extras</strong> — cambios o adicionales aprobados por el cliente.</li>
+      <li><strong>Generales</strong> — fianzas, pólizas y permisos no ligados a una partida; se reparten entre todas.</li>
+      <li><strong>Partidas</strong> — catálogo presupuestado del proyecto con su semáforo de consumo.</li>
+    </ul>
+    <p><strong>Semáforo:</strong> <span style="color:var(--verde);font-weight:700;">Verde</span> &lt;70% consumido · <span style="color:var(--amarillo);font-weight:700;">Amarillo</span> 70–90% · <span style="color:var(--rojo);font-weight:700;">Rojo</span> &gt;90%.</p>
+    <p><strong>Selector de proyecto:</strong> el botón de arriba cambia entre todos los proyectos activos/culminados. "Todos los proyectos" muestra un resumen consolidado de solo lectura, incluyendo el pipeline de cotizaciones pendientes — para capturar, elige un proyecto específico.</p>
+    <p><strong>Proyectos nuevos:</strong> se crean automáticamente al aprobar una cotización en el Cotizador — no hace falta tocar código.</p>
+    <p><strong>Base de datos real:</strong> cada registro que guardas se escribe directo en la hoja de Google Sheets (con historial de versiones de Google), compartida con el Cotizador. Al entrar a cada sección, la app se sincroniza automáticamente; también puedes forzar la sincronización con el botón ↻.</p>
+    <p>El botón <strong>⭳ CSV</strong> exporta un respaldo adicional en cualquier momento.</p>
+  </div>
+</div>
+
+<div class="overlay" id="nameOverlay">
+  <div class="sheet name-sheet">
+    <h3>¿Quién captura hoy?</h3>
+    <p>Tu nombre queda guardado en este dispositivo y se anota en los registros que ingreses, para dar seguimiento.</p>
+    <div class="field">
+      <label>Nombre y apellido</label>
+      <input type="text" id="nameInput" placeholder="Ej. Carlos Pérez">
+    </div>
+    <button class="btn btn-copper btn-block" onclick="saveUserName()">Continuar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN — misma URL de Apps Script que usa Cotizador.html
+   ========================================================= */
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycby6GXEF9EAK0CsU6h9OrPifBz_DXMwtIpBtVGDUOvwgTjnN6-ToFheRhd7JFq-RLv3nrQ/exec";
+// Logo vectorial de la marca (mismo SVG que usa el Cotizador)
+const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 924 606" role="img" aria-label="Easy Project - Soluciones en Climatización"><polygon points="357,12 246,156 186,228 108,150 168,66" fill="#444444"></polygon><polygon points="360,12 468,153 378,66" fill="#444444"></polygon><g fill="none" stroke="#1181AB" stroke-width="25" stroke-linejoin="miter" stroke-linecap="butt"><polyline points="63,178 186,291 285,225"></polyline><polyline points="63,250 186,363 285,297"></polyline><polyline points="63,322 186,435 285,369"></polyline></g><g fill="#444444" font-family="Helvetica, Arial, sans-serif" font-weight="400"><text x="360" y="327" font-size="138" textLength="390" lengthAdjust="spacingAndGlyphs">EASY</text><text x="366" y="441" font-size="113" textLength="540" lengthAdjust="spacingAndGlyphs">PROJECT</text></g><g fill="#1181AB" font-family="Helvetica, Arial, sans-serif" font-weight="700"><text x="198" y="537" font-size="84" textLength="522" lengthAdjust="spacingAndGlyphs">SOLUCIONES</text><text x="198" y="591" font-size="56" textLength="516" lengthAdjust="spacingAndGlyphs">EN CLIMATIZACIÓN</text></g></svg>`;
+document.getElementById("brandLogoSlot").innerHTML = LOGO_SVG;
+const ITBMS_RATE = 0.07; // Panamá
+
+const CATEGORIA_LABELS = {
+  "SUM-EQP":"Suministro · Equipos",
+  "SUM-MAT":"Suministro · Materiales instalación",
+  "SUM-ESC":"Suministro · Escotillas",
+  "SUM-DMP":"Suministro · Dampers",
+  "SUM-DCT":"Suministro · Ductería",
+  "SUM-REJ":"Suministro · Rejillas",
+  "SUM-GYP":"Suministro · Gypsum",
+  "SUM-ELE":"Suministro · Electricidad",
+  "SUM-PLO":"Suministro · Plomería",
+  "SUM-VAR":"Suministro · Varios",
+  "MAO-DMP":"Mano de obra · Dampers",
+  "MAO-DCT":"Mano de obra · Ductería",
+  "MAO-REJ":"Mano de obra · Rejillas",
+  "MAO-INS":"Mano de obra · Instalación",
+  "MAO-SUP":"Mano de obra · Supervisión",
+  "MAO-GYP":"Mano de obra · Gypsum",
+  "MAO-ELE":"Mano de obra · Electricidad",
+  "MAO-PLO":"Mano de obra · Plomería",
+  "MAO-VAR":"Mano de obra · Varios",
+  "VIA":"Viáticos"
+};
+
+/* =========================================================
+   ESTADO — proyectos y partidas ya NO están fijos en el código:
+   se leen de Google Sheets (tablas Proyectos y Partidas), y se
+   crean automáticamente cuando se aprueba una cotización en el
+   Cotizador.
+   ========================================================= */
+let proyectos = [];       // [{id, nombre, cliente, estado, ...}]
+let partidas = [];        // [{id, proyecto, categoria, nivel, desc, unidad, totalPresup, totalVenta, tipo}]
+let cotizaciones = [];    // para el pipeline en el panel "Todos los proyectos"
+let cotizacionItems = [];
+let compras = [];
+let manoObra = [];
+let extras = [];
+let generales = [];
+let viaticos = [];
+let clientes = [];
+let proveedores = [];
+let facturas = [];
+let abonosCliente = [];
+let abonosProveedor = [];
+let userName = "";
+let currentProyecto = null;
+let currentTab = "dashboard";
+let formOpen = { compras:false, mano:false, viaticos:false, extras:false, generales:false, factura:false, anticipo:false };
+let facturacionSubTab = "cobrar"; // cobrar | pagar
+let clienteFormOpenFact = false;
+let proveedorFormOpen = { c:false, m:false };
+let proveedoresPanelOpen = false;
+let editingProveedorId = null;
+let abonoAbierto = null; // { tipo:'cliente'|'proveedor', origenId } — controla qué fila muestra el mini-form de abono
+let expandedClienteCuenta = null;
+let expandedProveedorCuenta = null;
+let searchPartida = "";
+let itbmsMes = new Date().toISOString().slice(0,7); // "YYYY-MM", mes actual por defecto
+let syncState = "ok"; // ok | loading | error
+let lastSyncAt = null;
+
+const TABS = [
+  {id:"dashboard", label:"Inicio", icon:'<path d="M3 12l9-9 9 9M5 10v10h14V10"/>'},
+  {id:"compras", label:"Compras", icon:'<path d="M3 6h18M3 6l2 13h14l2-13M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>'},
+  {id:"mano", label:"M. Obra", icon:'<circle cx="12" cy="7" r="3"/><path d="M5 21v-2a5 5 0 0110 0v2"/><path d="M17 21v-2a4 4 0 00-3-3.87"/>'},
+  {id:"viaticos", label:"Viáticos", icon:'<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>'},
+  {id:"extras", label:"Extras", icon:'<path d="M12 5v14M5 12h14"/>'},
+  {id:"generales", label:"Generales", icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v0M16 4v0"/>'},
+  {id:"facturacion", label:"Facturación", icon:'<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h6"/>'},
+  {id:"partidas", label:"Partidas", icon:'<path d="M4 6h16M4 12h16M4 18h10"/>'}
+];
+const DATA_TABS = ["dashboard","compras","mano","viaticos","extras","generales","facturacion"];
+
+/* =========================================================
+   API — Google Sheets vía Apps Script (JSONP), backend único
+   compartido con el Cotizador.
+   ========================================================= */
+function jsonpRequest(url, timeoutMs){
+  return new Promise((resolve, reject) => {
+    const cbName = "__soleil_cb_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+    const script = document.createElement("script");
+    let done = false;
+    const timer = setTimeout(() => {
+      if(done) return;
+      done = true;
+      cleanup();
+      reject(new Error("Tiempo de espera agotado"));
+    }, timeoutMs||15000);
+    function cleanup(){
+      clearTimeout(timer);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+    window[cbName] = (data) => {
+      if(done) return;
+      done = true;
+      cleanup();
+      resolve(data);
+    };
+    script.onerror = () => {
+      if(done) return;
+      done = true;
+      cleanup();
+      reject(new Error("No se pudo conectar (red o URL incorrecta)"));
+    };
+    const sep = url.indexOf("?")>=0 ? "&" : "?";
+    script.src = url + sep + "callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+async function jsonpWithRetry(url, timeoutMs, retries){
+  try{
+    return await jsonpRequest(url, timeoutMs);
+  }catch(e){
+    if(retries>0){
+      await new Promise(r=>setTimeout(r, 1200));
+      return jsonpWithRetry(url, timeoutMs, retries-1);
+    }
+    throw e;
+  }
+}
+async function apiGetAll(){
+  try{
+    const data = await jsonpWithRetry(SHEETS_API_URL, 30000, 1);
+    return { ok:true, data };
+  }catch(e){
+    return { ok:false, error: e.message||String(e) };
+  }
+}
+async function apiAdd(table, record){
+  try{
+    const url = SHEETS_API_URL + "?action=add&table=" + encodeURIComponent(table) + "&record=" + encodeURIComponent(JSON.stringify(record));
+    const data = await jsonpWithRetry(url, 25000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: e.message||String(e) };
+  }
+}
+async function apiDelete(table, id){
+  try{
+    const url = SHEETS_API_URL + "?action=delete&table=" + encodeURIComponent(table) + "&id=" + encodeURIComponent(id);
+    const data = await jsonpWithRetry(url, 25000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: e.message||String(e) };
+  }
+}
+async function apiUpdate(table, id, record){
+  try{
+    const url = SHEETS_API_URL + "?action=update&table=" + encodeURIComponent(table) + "&id=" + encodeURIComponent(id) + "&record=" + encodeURIComponent(JSON.stringify(record));
+    const data = await jsonpWithRetry(url, 25000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return { ok:true };
+  }catch(e){ return { ok:false, error: e.message||String(e) }; }
+}
+async function apiMarcarProyecto(id, estado){
+  try{
+    const url = SHEETS_API_URL + "?action=marcarProyecto&id=" + encodeURIComponent(id) + "&estado=" + encodeURIComponent(estado);
+    const data = await jsonpWithRetry(url, 20000, 1);
+    if(!data.ok) throw new Error(data.error||"Error desconocido del servidor");
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: e.message||String(e) };
+  }
+}
+async function deleteRecord(table, id, btnEl){
+  if(!confirm("¿Eliminar este registro? Esta acción no se puede deshacer.")) return;
+  if(btnEl){ btnEl.disabled = true; btnEl.textContent = "…"; }
+  const r = await apiDelete(table, id);
+  if(r.ok){
+    if(table==="compras") compras = compras.filter(x=>x.id!==id);
+    else if(table==="mano_obra") manoObra = manoObra.filter(x=>x.id!==id);
+    else if(table==="viaticos") viaticos = viaticos.filter(x=>x.id!==id);
+    else if(table==="extras") extras = extras.filter(x=>x.id!==id);
+    else if(table==="generales") generales = generales.filter(x=>x.id!==id);
+    else if(table==="facturas") facturas = facturas.filter(x=>x.id!==id);
+    else if(table==="abonosCliente") abonosCliente = abonosCliente.filter(x=>x.id!==id);
+    else if(table==="abonosProveedor") abonosProveedor = abonosProveedor.filter(x=>x.id!==id);
+    showToast("Registro eliminado");
+    renderTab();
+  }else{
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = "🗑"; }
+    showToast("No se pudo eliminar (sin conexión). Intenta de nuevo.");
+  }
+}
+async function refreshAll(silent){
+  syncState = "loading";
+  if(!silent) renderTab();
+  const r = await apiGetAll();
+  if(r.ok){
+    proyectos = r.data.proyectos || [];
+    partidas = r.data.partidas || [];
+    cotizaciones = r.data.cotizaciones || [];
+    cotizacionItems = r.data.cotizacionItems || [];
+    compras = r.data.compras || [];
+    manoObra = r.data.mano_obra || [];
+    extras = r.data.extras || [];
+    generales = r.data.generales || [];
+    viaticos = r.data.viaticos || [];
+    clientes = r.data.clientes || [];
+    proveedores = r.data.proveedores || [];
+    facturas = r.data.facturas || [];
+    abonosCliente = r.data.abonosCliente || [];
+    abonosProveedor = r.data.abonosProveedor || [];
+    syncState = "ok";
+    lastSyncAt = new Date();
+  }else{
+    syncState = "error";
+  }
+  renderTab();
+  return r.ok;
+}
+
+/* =========================================================
+   ALMACENAMIENTO PERSONAL (nombre y último proyecto usado
+   en este dispositivo — no se comparte con el equipo)
+   ========================================================= */
+async function loadPersonal(key){
+  try{ const r = await window.storage.get(key, false); return r ? r.value : ""; }
+  catch(e){ return ""; }
+}
+async function savePersonal(key, val){
+  try{ await window.storage.set(key, val, false); }catch(e){}
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+async function init(){
+  if(!SHEETS_API_URL || SHEETS_API_URL.indexOf("__SHEETS_API_URL__")>=0){
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("setupGate").style.display = "block";
+    return;
+  }
+  userName = await loadPersonal("usuario_nombre");
+  const savedProyecto = await loadPersonal("proyecto_actual");
+
+  const ok = await refreshAll(true);
+  document.getElementById("loadingScreen").style.display = "none";
+
+  if(!ok){
+    document.getElementById("noProjectsTitle").textContent = "No se pudo sincronizar con Google Sheets";
+    document.getElementById("noProjectsText").innerHTML = "Esta cuenta/navegador no logró conectarse al backend. Lo más probable es que la implementación de Apps Script no esté configurada como <strong>\"Cualquier usuario\"</strong> con <strong>\"Ejecutar como: Yo\"</strong> — revisa esos dos ajustes en Implementar → Gestionar implementaciones. Si ya funciona en otro navegador/cuenta, es justo esa la señal de que el acceso quedó restringido.";
+    document.getElementById("noProjectsGate").style.display = "block";
+    return;
+  }
+  if(proyectos.length===0){
+    document.getElementById("noProjectsTitle").textContent = "Aún no hay proyectos activos";
+    document.getElementById("noProjectsText").innerHTML = 'Este sistema ahora crea proyectos automáticamente cuando apruebas una cotización en el <strong>Cotizador</strong>. Si acabas de configurar el sistema por primera vez, corre la función <code>setupInicial()</code> desde el editor de Apps Script para sembrar SOLEIL y GUAPA con su catálogo histórico.';
+    document.getElementById("noProjectsGate").style.display = "block";
+    return;
+  }
+
+  if(savedProyecto && (proyectos.some(p=>p.id===savedProyecto) || savedProyecto==="ALL")) currentProyecto = savedProyecto;
+  else currentProyecto = proyectos.find(p=>p.estado==="Activo") ? proyectos.find(p=>p.estado==="Activo").id : proyectos[0].id;
+
+  document.getElementById("appShell").style.display = "flex";
+  buildTabbar();
+  updateProyectoUI();
+  renderTab();
+  if(!ok) showToast("No se pudo conectar con Google Sheets. Revisa tu conexión y pulsa ↻.");
+  if(!userName){ toggleName(true); }
+}
+
+function buildTabbar(){
+  const bar = document.getElementById("tabbar");
+  bar.innerHTML = TABS.map(t => `
+    <button class="tab-btn ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>
+      ${t.label}
+    </button>`).join("");
+}
+function switchTab(id){
+  currentTab = id;
+  buildTabbar();
+  renderTab();
+  window.scrollTo(0,0);
+  if(DATA_TABS.includes(id)) refreshAll(true);
+}
+function renderTab(){
+  const el = document.getElementById("content");
+  if(currentTab==="dashboard") el.innerHTML = renderDashboard();
+  else if(currentTab==="compras") el.innerHTML = renderCompras();
+  else if(currentTab==="mano") el.innerHTML = renderManoObra();
+  else if(currentTab==="viaticos") el.innerHTML = renderViaticos();
+  else if(currentTab==="extras") el.innerHTML = renderExtras();
+  else if(currentTab==="generales") el.innerHTML = renderGenerales();
+  else if(currentTab==="facturacion") el.innerHTML = renderFacturacion();
+  else if(currentTab==="partidas") el.innerHTML = renderPartidas();
+}
+
+/* =========================================================
+   SELECTOR DE PROYECTO
+   ========================================================= */
+function proyectoById(id){ return proyectos.find(p=>p.id===id); }
+function partidasFor(key){ return partidas.filter(p=>p.proyecto===key); }
+
+function updateProyectoUI(){
+  const isAll = currentProyecto === "ALL";
+  const p = isAll ? null : proyectoById(currentProyecto);
+  const label = isAll ? "Todos los proyectos" : (p ? p.nombre : currentProyecto);
+  document.getElementById("proyectoPillLabel").textContent = label;
+  document.getElementById("appTitle").textContent = isAll ? "Resumen General" : ("Control de Gastos — " + label);
+  renderProyectoList();
+}
+function renderProyectoList(){
+  const cont = document.getElementById("proyectoList");
+  if(!cont) return;
+  let html = "";
+  const ordenados = [...proyectos].sort((a,b)=> {
+    const archA = a.archivado==='Sí' ? 1 : 0, archB = b.archivado==='Sí' ? 1 : 0;
+    if(archA !== archB) return archA - archB;
+    return (a.estado==='Activo'?0:1) - (b.estado==='Activo'?0:1);
+  });
+  ordenados.forEach(p=>{
+    const sel = currentProyecto===p.id;
+    const nuevoEstado = p.estado==='Activo' ? 'Culminado' : 'Activo';
+    const archivado = p.archivado==='Sí';
+    const puedeArchivar = p.estado==='Culminado';
+    html += `<div class="proyecto-opcion ${sel?'selected':''} ${archivado?'proyecto-archivado':''}">
+      <div style="flex:1;cursor:pointer;" onclick="selectProyecto('${p.id}')">
+        <div class="po-name">${escapeHtml(p.nombre)} <span class="estado-tag ${p.estado==='Activo'?'estado-activo':'estado-culminado'}">${p.estado}</span>${archivado?' <span class="estado-tag estado-archivado">Archivado</span>':''}</div>
+        <div class="po-sub">${partidasFor(p.id).length} partidas ${p.cliente?'· '+escapeHtml(p.cliente):''}</div>
+      </div>
+      <button class="toggle-estado-btn" onclick="toggleProyectoEstado('${p.id}','${p.estado}')" title="Cambiar a ${nuevoEstado}">→ ${nuevoEstado}</button>
+      ${puedeArchivar ? `<button class="toggle-estado-btn" onclick="toggleProyectoArchivado('${p.id}','${p.archivado||'No'}')" title="${archivado?'Desarchivar':'Archivar'}">${archivado?'↩ Desarchivar':'🗄 Archivar'}</button>` : ''}
+      <div class="check" onclick="selectProyecto('${p.id}')"></div>
+    </div>`;
+  });
+  const selAll = currentProyecto==="ALL";
+  html += `<div class="proyecto-opcion ${selAll?'selected':''}" onclick="selectProyecto('ALL')">
+    <div><div class="po-name">Todos los proyectos</div><div class="po-sub">Resumen consolidado, solo lectura</div></div>
+    <div class="check"></div>
+  </div>`;
+  cont.innerHTML = html;
+}
+function toggleProyectoSelector(open){
+  document.getElementById("proyectoOverlay").classList.toggle("open", open);
+}
+function cambiarMesItbms(valor){
+  itbmsMes = valor;
+  renderTab();
+}
+async function selectProyecto(key){
+  currentProyecto = key;
+  await savePersonal("proyecto_actual", key);
+  updateProyectoUI();
+  toggleProyectoSelector(false);
+  formOpen = { compras:false, mano:false, viaticos:false, extras:false, generales:false };
+  renderTab();
+}
+async function toggleProyectoEstado(id, estadoActual){
+  const nuevo = estadoActual==='Activo' ? 'Culminado' : 'Activo';
+  if(!confirm(`¿Marcar "${proyectoById(id).nombre}" como ${nuevo}?`)) return;
+  const r = await apiMarcarProyecto(id, nuevo);
+  if(r.ok){
+    const p = proyectoById(id); if(p) p.estado = nuevo;
+    showToast("Proyecto marcado como " + nuevo);
+    renderProyectoList();
+    renderTab();
+  }else{
+    showToast("No se pudo actualizar (sin conexión).");
+  }
+}
+async function toggleProyectoArchivado(id, archivadoActual){
+  const p = proyectoById(id);
+  if(!p) return;
+  if(p.estado !== 'Culminado'){ showToast("Solo se puede archivar un proyecto Culminado."); return; }
+  const nuevo = archivadoActual==='Sí' ? 'No' : 'Sí';
+  const accion = nuevo==='Sí' ? 'archivar' : 'desarchivar';
+  if(!confirm(`¿Deseas ${accion} "${p.nombre}"? ${nuevo==='Sí' ? 'Dejará de sumar en el Resumen General, pero sus datos quedan intactos.' : ''}`)) return;
+  const record = Object.assign({}, p, { archivado: nuevo });
+  const r = await apiUpdate('proyectos', id, record);
+  if(r.ok){
+    p.archivado = nuevo;
+    showToast(nuevo==='Sí' ? "Proyecto archivado" : "Proyecto desarchivado");
+    renderProyectoList();
+    renderTab();
+  }else{
+    showToast("No se pudo actualizar (sin conexión).");
+  }
+}
+function matchesProyecto(record, key){
+  // Los registros guardados antes de tener multi-proyecto no
+  // tienen el campo "proyecto" — se consideran de SOLEIL.
+  return (record.proyecto || "SOLEIL") === key;
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function fmtMoney(n){ n = Number(n)||0; return "B/. " + n.toLocaleString('es-PA',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtPct(n){ if(!isFinite(n)) return "—"; return (n*100).toFixed(1) + "%"; }
+function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2600);
+}
+function toggleHelp(open){ document.getElementById("helpOverlay").classList.toggle("open", open); }
+function toggleName(open){ document.getElementById("nameOverlay").classList.toggle("open", open); }
+async function saveUserName(){
+  const v = document.getElementById("nameInput").value.trim();
+  if(!v){ showToast("Escribe tu nombre para continuar"); return; }
+  userName = v;
+  await savePersonal("usuario_nombre", v);
+  toggleName(false);
+}
+function partidaOptions(selected){
+  const lista = partidasFor(currentProyecto);
+  const byCat = {};
+  lista.forEach(p=>{ (byCat[p.categoria] = byCat[p.categoria]||[]).push(p); });
+  return Object.keys(byCat).map(cat => `
+    <optgroup label="${escapeHtml(CATEGORIA_LABELS[cat]||cat)}">
+      ${byCat[cat].map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${p.id} — ${escapeHtml(p.desc)} (Nv.${p.nivel})</option>`).join("")}
+    </optgroup>`).join("");
+}
+function getPartida(key, id){ return partidasFor(key).find(p=>p.id===id); }
+function syncBadge(){
+  const cls = syncState==="ok" ? "sync-ok" : syncState==="loading" ? "sync-loading" : "sync-err";
+  const label = syncState==="ok" ? (lastSyncAt? "Sincronizado "+lastSyncAt.toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit'}) : "Sincronizado")
+    : syncState==="loading" ? "Sincronizando…" : "Sin conexión con Sheets";
+  return `<span class="footnote"><span class="sync-dot ${cls}"></span>${label}</span>`;
+}
+
+/* =========================================================
+   PIPELINE DE COTIZACIONES (para el panel "Todos los proyectos")
+   ========================================================= */
+function latestCotizacionesGlobal(){
+  const byGrupo = {};
+  cotizaciones.forEach(c=>{
+    const g = c.grupoId || c.id;
+    if(!byGrupo[g] || Number(c.version)>Number(byGrupo[g].version)) byGrupo[g] = c;
+  });
+  return Object.values(byGrupo);
+}
+function pipelineValue(){
+  const abiertas = latestCotizacionesGlobal().filter(c=>c.estado==='Borrador'||c.estado==='Enviada');
+  let total = 0;
+  abiertas.forEach(c=>{
+    const items = cotizacionItems.filter(i=>String(i.cotizacionId)===String(c.id));
+    total += items.reduce((s,i)=>s+Number(i.totalVenta),0);
+  });
+  return { total, count: abiertas.length };
+}
+
+/* =========================================================
+   CONTROL DE ITBMS — cobrado (ventas) vs pagado (compras/M.O.
+   subcontratada/extras/generales) para un mes dado. Es una
+   ESTIMACIÓN de gestión basada en fechas de activación/registro,
+   no reemplaza la conciliación formal con tu contador para la
+   declaración a la DGI.
+   ========================================================= */
+function enMes(fechaVal, mes){
+  if(!fechaVal) return false;
+  const s = (fechaVal instanceof Date) ? fechaVal.toISOString() : String(fechaVal);
+  return s.slice(0,7) === mes;
+}
+function computeItbmsControl(mes){
+  // Cobrado: Facturas emitidas este mes — aquí se causa el ITBMS de verdad,
+  // sin importar cuándo se cobre después.
+  let cobradoFacturas = 0, nFacturas = 0;
+  facturas.filter(f=>enMes(f.fecha, mes)).forEach(f=>{
+    cobradoFacturas += Number(f.itbms)||0; nFacturas++;
+  });
+  // Cobrado: extras aprobados/ejecutados con ITBMS en la venta
+  let cobradoExtras = 0, nExtrasCobrado = 0;
+  extras.filter(e=>(e.estado==='Aprobado'||e.estado==='Ejecutado') && e.ventaConItbms && enMes(e.fecha, mes)).forEach(e=>{
+    cobradoExtras += Number(e.itbmsVenta)||0; nExtrasCobrado++;
+  });
+  // Pagado: compras del mes
+  let pagadoCompras = 0, nCompras = 0;
+  compras.filter(c=>enMes(c.fecha, mes)).forEach(c=>{ pagadoCompras += Number(c.itbms)||0; nCompras++; });
+  // Pagado: mano de obra subcontratada del mes
+  let pagadoMano = 0, nMano = 0;
+  manoObra.filter(m=>m.tipoMano==='Subcontratista' && enMes(m.fecha, mes)).forEach(m=>{ pagadoMano += Number(m.itbms)||0; nMano++; });
+  // Pagado: costo de extras con ITBMS del mes
+  let pagadoExtras = 0, nExtrasPagado = 0;
+  extras.filter(e=>e.costoConItbms && enMes(e.fecha, mes)).forEach(e=>{ pagadoExtras += Number(e.itbmsCosto)||0; nExtrasPagado++; });
+  // Pagado: generales con ITBMS del mes
+  let pagadoGenerales = 0, nGenerales = 0;
+  generales.filter(g=>g.conItbms && enMes(g.fecha, mes)).forEach(g=>{ pagadoGenerales += Number(g.itbms)||0; nGenerales++; });
+
+  const cobrado = cobradoFacturas + cobradoExtras;
+  const pagado = pagadoCompras + pagadoMano + pagadoExtras + pagadoGenerales;
+  return {
+    cobrado, pagado, diferencia: cobrado - pagado,
+    detalle: { cobradoFacturas, cobradoExtras, pagadoCompras, pagadoMano, pagadoExtras, pagadoGenerales },
+    conteos: { nFacturas, nExtrasCobrado, nCompras, nMano, nExtrasPagado, nGenerales }
+  };
+}
+
+/* =========================================================
+   CUENTAS POR COBRAR / POR PAGAR — helpers de abonos y saldos
+   ========================================================= */
+function abonosDeFactura(facturaId){
+  return abonosCliente.filter(a=>String(a.facturaId)===String(facturaId)).reduce((s,a)=>s+Number(a.monto),0);
+}
+function abonosDeOrigen(origenTabla, origenId){
+  return abonosProveedor.filter(a=>a.origenTabla===origenTabla && String(a.origenId)===String(origenId)).reduce((s,a)=>s+Number(a.monto),0);
+}
+function estadoDeSaldo(total, abonado){
+  total = Number(total)||0; abonado = Number(abonado)||0;
+  if(abonado<=0) return 'Pendiente';
+  if(abonado>=total) return 'Pagado';
+  return 'Parcial';
+}
+function facturasDe(key){ return facturas.filter(f=>matchesProyecto(f,key)); }
+function anticiposSinAplicar(key){
+  // Abonos de Cliente sin factura vinculada — dinero ya recibido antes de facturar
+  return abonosCliente.filter(a=>matchesProyecto(a,key) && (!a.facturaId || a.facturaId===''));
+}
+function totalesPorCobrar(key){
+  const fs = facturasDe(key);
+  const totalFacturado = fs.reduce((s,f)=>s+Number(f.total),0);
+  const totalCobrado = fs.reduce((s,f)=>s+abonosDeFactura(f.id),0);
+  const totalAnticipos = anticiposSinAplicar(key).reduce((s,a)=>s+Number(a.monto),0);
+  return { totalFacturado, totalCobrado, saldo: totalFacturado-totalCobrado, count: fs.length, totalAnticipos };
+}
+function totalesPorPagar(key){
+  const cs = compras.filter(c=>matchesProyecto(c,key));
+  const ms = manoObra.filter(m=>matchesProyecto(m,key));
+  let totalFacturas = 0, totalAbonado = 0;
+  cs.forEach(c=>{ totalFacturas += Number(c.total); totalAbonado += abonosDeOrigen('compras', c.id); });
+  ms.forEach(m=>{ totalFacturas += Number(m.total); totalAbonado += abonosDeOrigen('mano_obra', m.id); });
+  return { totalFacturas, totalAbonado, saldo: totalFacturas-totalAbonado, count: cs.length+ms.length };
+}
+
+/* =========================================================
+   ESTADO DE CUENTA — consolidado por Cliente/Proveedor a
+   través de TODOS los proyectos, no solo el seleccionado.
+   ========================================================= */
+function estadoCuentaCliente(clienteId){
+  const fs = facturas.filter(f=>f.clienteId===clienteId);
+  const totalFacturado = fs.reduce((s,f)=>s+Number(f.total),0);
+  const totalCobrado = fs.reduce((s,f)=>s+abonosDeFactura(f.id),0);
+  return { facturas: fs, totalFacturado, totalCobrado, saldo: totalFacturado-totalCobrado };
+}
+function estadoCuentaProveedor(proveedorId){
+  const cs = compras.filter(c=>c.proveedorId===proveedorId);
+  const ms = manoObra.filter(m=>m.proveedorId===proveedorId);
+  let totalFacturado = 0, totalPagado = 0;
+  const items = [];
+  cs.forEach(c=>{
+    const abonado = abonosDeOrigen('compras', c.id);
+    totalFacturado += Number(c.total); totalPagado += abonado;
+    items.push({ tipo:'compras', id:c.id, desc:c.descripcion, proyecto:c.proyecto, fecha:c.fecha, total:c.total, abonado });
+  });
+  ms.forEach(m=>{
+    const abonado = abonosDeOrigen('mano_obra', m.id);
+    totalFacturado += Number(m.total); totalPagado += abonado;
+    items.push({ tipo:'mano_obra', id:m.id, desc:m.tecnico||'Mano de obra', proyecto:m.proyecto, fecha:m.fecha, total:m.total, abonado });
+  });
+  items.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  return { items, totalFacturado, totalPagado, saldo: totalFacturado-totalPagado };
+}
+function toggleClienteCuenta(id){ expandedClienteCuenta = (expandedClienteCuenta===id) ? null : id; renderTab(); }
+function toggleProveedorCuenta(id){ expandedProveedorCuenta = (expandedProveedorCuenta===id) ? null : id; renderTab(); }
+function renderEstadoCuenta(){
+  return `
+    <div class="footnote" style="text-align:left;margin-bottom:12px;">Consolida todos los proyectos de cada cliente/proveedor, no solo el que tengas seleccionado arriba. Solo se cuentan compras/mano de obra que quedaron vinculadas a un proveedor del catálogo.</div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="section-title">Clientes <span class="tag">${clientes.length}</span></div>
+      ${clientes.length===0 ? '<div class="empty-note">Aún no hay clientes registrados.</div>' :
+        clientes.map(c=>{
+          const cta = estadoCuentaCliente(c.id);
+          const expanded = expandedClienteCuenta===c.id;
+          return `
+          <div class="record">
+            <div class="record-top" style="cursor:pointer;" onclick="toggleClienteCuenta('${c.id}')">
+              <div><div class="record-title">${escapeHtml(c.nombre)}</div><div class="record-sub">${cta.facturas.length} factura(s)</div></div>
+              <div class="record-total" style="color:${cta.saldo>0?'var(--rojo)':'var(--verde)'}">${fmtMoney(cta.saldo)}</div>
+            </div>
+            ${expanded ? `
+              <div class="totals-box" style="margin-top:8px;">
+                <div class="tl"><span>Total facturado</span><span>${fmtMoney(cta.totalFacturado)}</span></div>
+                <div class="tl"><span>Total cobrado</span><span>${fmtMoney(cta.totalCobrado)}</span></div>
+                <div class="tl" style="font-weight:700;"><span>Saldo por cobrar</span><span>${fmtMoney(cta.saldo)}</span></div>
+              </div>
+              ${cta.facturas.length===0 ? '<div class="empty-note">Sin facturas todavía.</div>' :
+                cta.facturas.map(f=>`<div class="item-row"><div><div class="ir-desc">${escapeHtml(f.concepto)}</div><div class="ir-sub">Proyecto ${escapeHtml(proyectoById(f.proyecto)?proyectoById(f.proyecto).nombre:f.proyecto)} · ${f.fecha||'sin fecha'}</div></div><div class="ir-total">${fmtMoney(f.total)}</div></div>`).join("")}
+            ` : ''}
+          </div>`;
+        }).join("")}
+    </div>
+    <div class="card">
+      <div class="section-title">Proveedores <span class="tag">${proveedores.length}</span></div>
+      ${proveedores.length===0 ? '<div class="empty-note">Aún no hay proveedores registrados.</div>' :
+        proveedores.map(p=>{
+          const cta = estadoCuentaProveedor(p.id);
+          const expanded = expandedProveedorCuenta===p.id;
+          return `
+          <div class="record">
+            <div class="record-top" style="cursor:pointer;" onclick="toggleProveedorCuenta('${p.id}')">
+              <div><div class="record-title">${escapeHtml(p.nombre)}</div><div class="record-sub">${cta.items.length} movimiento(s)</div></div>
+              <div class="record-total" style="color:${cta.saldo>0?'var(--rojo)':'var(--verde)'}">${fmtMoney(cta.saldo)}</div>
+            </div>
+            ${expanded ? `
+              <div class="totals-box" style="margin-top:8px;">
+                <div class="tl"><span>Total facturado</span><span>${fmtMoney(cta.totalFacturado)}</span></div>
+                <div class="tl"><span>Total pagado</span><span>${fmtMoney(cta.totalPagado)}</span></div>
+                <div class="tl" style="font-weight:700;"><span>Saldo por pagar</span><span>${fmtMoney(cta.saldo)}</span></div>
+              </div>
+              ${cta.items.length===0 ? '<div class="empty-note">Sin movimientos todavía.</div>' :
+                cta.items.map(it=>`<div class="item-row"><div><div class="ir-desc">${escapeHtml(it.desc||'')}</div><div class="ir-sub">Proyecto ${escapeHtml(proyectoById(it.proyecto)?proyectoById(it.proyecto).nombre:it.proyecto)} · ${it.fecha||'sin fecha'}</div></div><div class="ir-total">${fmtMoney(it.total)}</div></div>`).join("")}
+            ` : ''}
+          </div>`;
+        }).join("")}
+    </div>
+  `;
+}
+
+/* =========================================================
+   CÁLCULOS FINANCIEROS — por proyecto
+   ========================================================= */
+function sumPresupFor(key){ return partidasFor(key).reduce((s,p)=>s+Number(p.totalPresup),0); }
+function sumVentaFor(key){ return partidasFor(key).reduce((s,p)=>s+Number(p.totalVenta),0); }
+function gastadoPorPartida(key, id){
+  // El ITBMS pagado en compras es acreditable (Easy Project está inscrita),
+  // así que el costo real contra presupuesto usa el monto NETO (subtotal),
+  // no el total con impuesto. Los registros anteriores a este cambio no
+  // tienen "subtotal" guardado — para esos se usa "total" como respaldo.
+  const c = compras.filter(r=>r.idPartida===id && matchesProyecto(r,key))
+    .reduce((s,r)=> s + Number(r.subtotal!==undefined && r.subtotal!=="" ? r.subtotal : r.total), 0);
+  const m = manoObra.filter(r=>r.idPartida===id && matchesProyecto(r,key))
+    .reduce((s,r)=> s + Number(r.subtotal!==undefined && r.subtotal!=="" ? r.subtotal : r.total), 0);
+  const v = viaticos.filter(r=>r.idPartida===id && matchesProyecto(r,key))
+    .reduce((s,r)=> s + Number(r.monto)||0, 0);
+  return c + m + v;
+}
+function semaforoDe(pct){ if(pct > 0.9) return "rojo"; if(pct >= 0.7) return "amarillo"; return "verde"; }
+function computePartidas(key){
+  const sumPresup = sumPresupFor(key);
+  const genTotal = generales.filter(g=>matchesProyecto(g,key)).reduce((s,g)=>s+Number(g.monto),0);
+  return partidasFor(key).map(p=>{
+    const gastado = gastadoPorPartida(key, p.id);
+    const pct = p.totalPresup>0 ? gastado/p.totalPresup : 0;
+    const peso = sumPresup>0 ? p.totalPresup/sumPresup : 0;
+    const genProrrateado = peso*genTotal;
+    const costoConGenerales = gastado + genProrrateado;
+    const rentabilidad = p.totalVenta - gastado;
+    const rentabilidadAj = p.totalVenta - costoConGenerales;
+    return {...p, gastado, pct, semaforo:semaforoDe(pct), genProrrateado, costoConGenerales,
+      rentabilidad, rentabilidadAj, pctRent: p.totalVenta>0 ? rentabilidad/p.totalVenta : 0};
+  });
+}
+function computeDashboard(key){
+  const ventaTotal = sumVentaFor(key);
+  const sumPresup = sumPresupFor(key);
+  const parts = computePartidas(key);
+  const costoTotalReal = parts.reduce((s,p)=>s+p.gastado,0);
+  const rentabilidadTotal = ventaTotal - costoTotalReal;
+  const genTotal = generales.filter(g=>matchesProyecto(g,key)).reduce((s,g)=>s+Number(g.monto),0);
+  const rentabilidadAjustada = rentabilidadTotal - genTotal;
+  const cComp = compras.filter(c=>matchesProyecto(c,key));
+  const cMano = manoObra.filter(m=>matchesProyecto(m,key));
+  const cExtras = extras.filter(e=>matchesProyecto(e,key));
+  const pendCompras = cComp.reduce((s,c)=>s+Math.max(0, Number(c.total) - abonosDeOrigen('compras', c.id)), 0);
+  const pendMano = cMano.reduce((s,m)=>s+Math.max(0, Number(m.total) - abonosDeOrigen('mano_obra', m.id)), 0);
+  const manoTotal = cMano.reduce((s,m)=>s+Number(m.total),0);
+  const extrasAprob = cExtras.filter(e=>e.estado==="Aprobado"||e.estado==="Ejecutado");
+  const ventaExtras = extrasAprob.reduce((s,e)=>s+Number(e.ventaAdicional),0);
+  const costoExtras = extrasAprob.reduce((s,e)=>s+Number(e.costoEstimado),0);
+  const pctGlobal = sumPresup>0 ? costoTotalReal/sumPresup : 0;
+  const riesgo = parts.filter(p=>p.semaforo!=="verde").sort((a,b)=>b.pct-a.pct);
+  return {
+    sumPresup, ventaTotal, costoTotalReal, rentabilidadTotal,
+    pctRentabilidadTotal: ventaTotal>0?rentabilidadTotal/ventaTotal:0,
+    pendienteTotal: pendCompras+pendMano, manoTotal, genTotal,
+    rentabilidadAjustada, pctRentabilidadAjustada: ventaTotal>0?rentabilidadAjustada/ventaTotal:0,
+    ventaExtras, costoExtras, rentabilidadExtras: ventaExtras-costoExtras,
+    pctGlobal, riesgo
+  };
+}
+function computeDashboardAll(){
+  const agg = { sumPresup:0, ventaTotal:0, costoTotalReal:0, rentabilidadTotal:0, pendienteTotal:0,
+    manoTotal:0, genTotal:0, rentabilidadAjustada:0, ventaExtras:0, costoExtras:0, rentabilidadExtras:0, riesgo:[] };
+  const proyectosNoArchivados = proyectos.filter(p=>p.archivado!=='Sí');
+  proyectosNoArchivados.forEach(p=>{
+    const key = p.id;
+    const d = computeDashboard(key);
+    agg.sumPresup += d.sumPresup;
+    agg.ventaTotal += d.ventaTotal;
+    agg.costoTotalReal += d.costoTotalReal;
+    agg.rentabilidadTotal += d.rentabilidadTotal;
+    agg.pendienteTotal += d.pendienteTotal;
+    agg.manoTotal += d.manoTotal;
+    agg.genTotal += d.genTotal;
+    agg.rentabilidadAjustada += d.rentabilidadAjustada;
+    agg.ventaExtras += d.ventaExtras;
+    agg.costoExtras += d.costoExtras;
+    agg.rentabilidadExtras += d.rentabilidadExtras;
+    d.riesgo.forEach(pt=> agg.riesgo.push({...pt, proyectoKey:key, proyectoNombre:p.nombre}));
+  });
+  agg.pctGlobal = agg.sumPresup>0 ? agg.costoTotalReal/agg.sumPresup : 0;
+  agg.pctRentabilidadTotal = agg.ventaTotal>0 ? agg.rentabilidadTotal/agg.ventaTotal : 0;
+  agg.pctRentabilidadAjustada = agg.ventaTotal>0 ? agg.rentabilidadAjustada/agg.ventaTotal : 0;
+  agg.riesgo.sort((a,b)=>b.pct-a.pct);
+  agg.pipeline = pipelineValue();
+  agg.itbms = computeItbmsControl(itbmsMes);
+  const cxcAgg = { totalFacturado:0, totalCobrado:0, saldo:0 };
+  const cxpAgg = { totalFacturas:0, totalAbonado:0, saldo:0 };
+  proyectosNoArchivados.forEach(p=>{
+    const c = totalesPorCobrar(p.id); cxcAgg.totalFacturado+=c.totalFacturado; cxcAgg.totalCobrado+=c.totalCobrado; cxcAgg.saldo+=c.saldo;
+    const g = totalesPorPagar(p.id); cxpAgg.totalFacturas+=g.totalFacturas; cxpAgg.totalAbonado+=g.totalAbonado; cxpAgg.saldo+=g.saldo;
+  });
+  agg.cxc = cxcAgg; agg.cxp = cxpAgg;
+  return agg;
+}
+
+/* =========================================================
+   RING SVG (reemplaza al gauge de aguja)
+   ========================================================= */
+function ringSvg(pct){
+  const clamped = Math.max(0, Math.min(pct, 1));
+  const color = pct>0.9 ? 'var(--rojo)' : pct>=0.7 ? 'var(--amarillo)' : '#4ade80';
+  const r = 50, c = 2*Math.PI*r;
+  const dash = clamped*c;
+  return `
+  <svg class="ring-figure" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="12"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round"
+            stroke-dasharray="${c.toFixed(1)} ${c.toFixed(1)}" stroke-dashoffset="${(c-dash).toFixed(1)}"
+            transform="rotate(-90 60 60)"/>
+    <text x="60" y="57" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="21" font-weight="700" fill="#fff">${fmtPct(pct)}</text>
+    <text x="60" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="#aebac1">consumido</text>
+  </svg>`;
+}
+
+/* =========================================================
+   RENDER: DASHBOARD
+   ========================================================= */
+function renderDashboard(){
+  const isAll = currentProyecto === "ALL";
+  const d = isAll ? computeDashboardAll() : computeDashboard(currentProyecto);
+  const disponible = d.sumPresup - d.costoTotalReal;
+  return `
+    <div class="dash-hero">
+      <div>
+        <div class="section-title">Presupuesto consumido <span class="tag">${isAll?'TODOS LOS PROYECTOS':'GLOBAL'}</span></div>
+        <div class="ring-wrap">
+          ${ringSvg(d.pctGlobal)}
+        </div>
+      </div>
+      <div class="dash-hero-stats">
+        <div class="dash-hero-stat"><div class="hs-label">Presupuestado</div><div class="hs-value">${fmtMoney(d.sumPresup)}</div></div>
+        <div class="dash-hero-stat"><div class="hs-label">Gastado</div><div class="hs-value">${fmtMoney(d.costoTotalReal)}</div></div>
+        <div class="dash-hero-stat"><div class="hs-label">Disponible</div><div class="hs-value ${disponible>=0?'pos':''}">${fmtMoney(disponible)}</div></div>
+        <div class="dash-hero-stat"><button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar" style="border-color:rgba(255,255,255,.25);color:#fff;">↻</button></div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      ${isAll ? `
+      <div class="card">
+        <div class="section-title">Pipeline de cotizaciones <span class="tag">DESDE EL COTIZADOR</span></div>
+        <div class="kpi-grid">
+          <div class="kpi accent"><div class="k-label">Valor en pipeline, sin ITBMS (Borrador + Enviada)</div><div class="k-value">${fmtMoney(d.pipeline.total)}</div></div>
+          <div class="kpi"><div class="k-label"># Cotizaciones abiertas</div><div class="k-value">${d.pipeline.count}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-head" style="margin-bottom:6px;">
+          <div class="section-title" style="margin-bottom:0;">Control de ITBMS <span class="tag">ESTIMADO</span></div>
+          <input type="month" value="${itbmsMes}" onchange="cambiarMesItbms(this.value)" style="border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:'Inter',sans-serif;font-size:12.5px;">
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi pos"><div class="k-label">ITBMS cobrado (ventas)</div><div class="k-value">${fmtMoney(d.itbms.cobrado)}</div></div>
+          <div class="kpi neg"><div class="k-label">ITBMS pagado (compras/M.O./extras/generales)</div><div class="k-value">${fmtMoney(d.itbms.pagado)}</div></div>
+          <div class="kpi ${d.itbms.diferencia>=0?'accent':'pos'}" style="grid-column:1 / -1;">
+            <div class="k-label">${d.itbms.diferencia>=0 ? 'Posible aporte a DGI este mes' : 'Crédito fiscal a favor este mes'}</div>
+            <div class="k-value">${fmtMoney(Math.abs(d.itbms.diferencia))}</div>
+          </div>
+        </div>
+        <div class="footnote" style="text-align:left;margin-top:8px;">Estimación de gestión según fecha de emisión de cada factura y de registro de cada gasto — concilia con tu contador antes de declarar. Cobrado: ${d.itbms.conteos.nFacturas} factura(s) emitida(s) + ${d.itbms.conteos.nExtrasCobrado} extra(s). Pagado: ${d.itbms.conteos.nCompras} compra(s), ${d.itbms.conteos.nMano} M.O. subcontratada, ${d.itbms.conteos.nExtrasPagado} extra(s), ${d.itbms.conteos.nGenerales} general(es).</div>
+      </div>
+      <div class="card">
+        <div class="section-title">Cuentas por Cobrar y por Pagar <span class="tag">TODOS LOS PROYECTOS</span></div>
+        <div class="kpi-grid">
+          <div class="kpi pos"><div class="k-label">Por cobrar (saldo)</div><div class="k-value">${fmtMoney(d.cxc.saldo)}</div></div>
+          <div class="kpi neg"><div class="k-label">Por pagar (saldo)</div><div class="k-value">${fmtMoney(d.cxp.saldo)}</div></div>
+        </div>
+        <div class="footnote" style="text-align:left;margin-top:8px;">Facturado a clientes: ${fmtMoney(d.cxc.totalFacturado)} · Cobrado: ${fmtMoney(d.cxc.totalCobrado)}. Facturado por proveedores: ${fmtMoney(d.cxp.totalFacturas)} · Pagado: ${fmtMoney(d.cxp.totalAbonado)}. Detalle por proyecto en la pestaña "Facturación".</div>
+      </div>` : ''}
+
+      <div class="card">
+        <div class="section-title">Rentabilidad del proyecto</div>
+        <div class="mini-grid">
+          <div class="mini"><div class="m-label">Venta total</div><div class="m-value">${fmtMoney(d.ventaTotal)}</div></div>
+          <div class="mini"><div class="m-label">Costo real</div><div class="m-value">${fmtMoney(d.costoTotalReal)}</div></div>
+          <div class="mini"><div class="m-label">Rentabilidad</div><div class="m-value ${d.rentabilidadTotal>=0?'pos':'neg'}">${fmtMoney(d.rentabilidadTotal)}</div></div>
+          <div class="mini"><div class="m-label">% Rentabilidad</div><div class="m-value ${d.rentabilidadTotal>=0?'pos':'neg'}">${fmtPct(d.pctRentabilidadTotal)}</div></div>
+        </div>
+        ${!isAll ? `
+        <div class="footnote" style="text-align:left;margin:8px 0 6px;">Para el expediente físico del proyecto:</div>
+        <div class="actions-row" style="gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="exportarReporteRentabilidadPdf('presupuestada')">⭳ Reporte presupuestado (PDF)</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportarReporteRentabilidadPdf('final')">⭳ Reporte final (PDF)</button>
+        </div>` : ''}
+      </div>
+
+      <div class="card">
+        <div class="section-title">Ajustado con gastos generales</div>
+        <div class="mini-grid">
+          <div class="mini"><div class="m-label">Gastos generales</div><div class="m-value">${fmtMoney(d.genTotal)}</div></div>
+          <div class="mini"><div class="m-label">Rentab. ajustada</div><div class="m-value ${d.rentabilidadAjustada>=0?'pos':'neg'}">${fmtMoney(d.rentabilidadAjustada)}</div></div>
+          <div class="mini"><div class="m-label">% ajustado</div><div class="m-value ${d.rentabilidadAjustada>=0?'pos':'neg'}">${fmtPct(d.pctRentabilidadAjustada)}</div></div>
+          <div class="mini"><div class="m-label">M. de obra registrada</div><div class="m-value">${fmtMoney(d.manoTotal)}</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Pagos y extras</div>
+        <div class="mini-grid">
+          <div class="mini"><div class="m-label">Pendiente de pago</div><div class="m-value neg">${fmtMoney(d.pendienteTotal)}</div></div>
+          <div class="mini"><div class="m-label">Venta extras aprob.</div><div class="m-value">${fmtMoney(d.ventaExtras)}</div></div>
+          <div class="mini"><div class="m-label">Rentab. extras</div><div class="m-value ${d.rentabilidadExtras>=0?'pos':'neg'}">${fmtMoney(d.rentabilidadExtras)}</div></div>
+          <div class="mini"><div class="m-label">Partidas en riesgo</div><div class="m-value">${d.riesgo.length}</div></div>
+        </div>
+      </div>
+
+      <div class="card dash-grid-full">
+        <div class="section-title">Partidas amarillas y rojas <span class="tag">${d.riesgo.length}</span></div>
+        ${d.riesgo.length===0 ? '<div class="empty-note">Ninguna partida supera el 70% de consumo. Todo en verde.</div>' :
+          d.riesgo.map(p=>`
+          <div class="risk-row">
+            <div>
+              <div class="risk-id">${p.id} ${isAll?`<span class="proyecto-tag">${escapeHtml(p.proyectoNombre||p.proyectoKey)}</span>`:''}</div>
+              <div class="risk-cat">${escapeHtml(CATEGORIA_LABELS[p.categoria]||p.categoria)}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="pct-badge" style="background:var(--${p.semaforo==='rojo'?'rojo':'amarillo'}-soft);color:var(--${p.semaforo==='rojo'?'rojo':'amarillo'});">${fmtPct(p.pct)}</span>
+              <span class="semaforo sem-${p.semaforo}"></span>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>
+    <div style="text-align:center;">${syncBadge()}</div>
+  `;
+}
+
+/* =========================================================
+   CSV EXPORT
+   ========================================================= */
+function toCsv(headers, rows){
+  const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines = [headers.map(esc).join(",")];
+  rows.forEach(r=> lines.push(r.map(esc).join(",")));
+  return lines.join("\r\n");
+}
+function downloadCsv(filename, csv){
+  const blob = new Blob(["\ufeff"+csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("CSV exportado");
+}
+function exportCompras(){
+  const rows = compras.filter(c=>matchesProyecto(c,currentProyecto));
+  const csv = toCsv(
+    ["Fecha","Proveedor","Documento","Descripción","Cantidad","Costo Unit.","Subtotal","ITBMS (7%)","Total","ID Partida","Factura/Recibo","Abonado","Estado","Registrado por"],
+    rows.map(c=>[c.fecha,c.proveedor,c.documento,c.descripcion,c.cantidad,c.costoUnit,c.subtotal,c.itbms,c.total,c.idPartida,c.factura,abonosDeOrigen('compras',c.id),estadoDeSaldo(c.total,abonosDeOrigen('compras',c.id)),c.registradoPor])
+  );
+  downloadCsv("compras_"+currentProyecto+".csv", csv);
+}
+function exportViaticos(){
+  const rows = viaticos.filter(v=>matchesProyecto(v,currentProyecto));
+  const csv = toCsv(
+    ["Fecha","Técnico","Concepto","Descripción","Método de pago","Monto","Factura","Aplica ITBMS","ITBMS (7%)","Total","N° Fiscal","ID Partida","Registrado por"],
+    rows.map(v=>[v.fecha,v.tecnico,v.concepto,v.descripcion,v.metodoPago,v.monto,v.tieneFactura,v.aplicaItbms,v.itbms,v.total,v.numeroFiscal,v.idPartida,v.registradoPor])
+  );
+  downloadCsv("viaticos_"+currentProyecto+".csv", csv);
+}
+function exportManoObra(){
+  const rows = manoObra.filter(m=>matchesProyecto(m,currentProyecto));
+  const csv = toCsv(
+    ["Fecha","Técnico/Cuadrilla","ID Partida","Tipo","Horas","Costo/Hora","Descripción del trabajo","Monto acordado","Subtotal","ITBMS (7%)","Total","Abonado","Estado","Observaciones","Registrado por"],
+    rows.map(m=>[m.fecha,m.tecnico,m.idPartida,(m.tipoMano==='Subcontratista'?'Subcontratista con factura':m.tipoMano==='SubcontratistaSinFactura'?'Subcontratista sin factura':'Empleado propio'),m.horas,m.costoHora,m.descripcionTrabajo||'',m.montoTotal||'',m.subtotal,m.itbms,m.total,abonosDeOrigen('mano_obra',m.id),estadoDeSaldo(m.total,abonosDeOrigen('mano_obra',m.id)),m.obs,m.registradoPor])
+  );
+  downloadCsv("mano_de_obra_"+currentProyecto+".csv", csv);
+}
+function exportExtras(){
+  const rows = extras.filter(e=>matchesProyecto(e,currentProyecto));
+  const csv = toCsv(
+    ["Fecha","Descripción","Partida/Nivel relacionado","Venta Adicional","ITBMS Venta","Costo Estimado","ITBMS Costo","Rentabilidad","Estado","Registrado por"],
+    rows.map(e=>[e.fecha,e.descripcion,e.nivelPartida,e.ventaAdicional,e.itbmsVenta||0,e.costoEstimado,e.itbmsCosto||0,(Number(e.ventaAdicional)-Number(e.costoEstimado)),e.estado,e.registradoPor])
+  );
+  downloadCsv("extras_cambios_"+currentProyecto+".csv", csv);
+}
+function exportGenerales(){
+  const rows = generales.filter(g=>matchesProyecto(g,currentProyecto));
+  const csv = toCsv(
+    ["Concepto","Descripción","Fecha","Monto","ITBMS (7%)","Total con ITBMS","Estado Pago","Notas","Registrado por"],
+    rows.map(g=>[g.concepto,g.descripcion,g.fecha,g.monto,g.itbms||0,g.totalConItbms||g.monto,g.estadoPago,g.notas,g.registradoPor])
+  );
+  downloadCsv("gastos_generales_"+currentProyecto+".csv", csv);
+}
+
+/* =========================================================
+   RENDER: COMPRAS
+   ========================================================= */
+function renderCompras(){
+  const isAll = currentProyecto === "ALL";
+  const filtered = compras.filter(c=>matchesProyecto(c,currentProyecto));
+  const rows = [...filtered].reverse();
+  const total = filtered.reduce((s,c)=>s+Number(c.total),0);
+  return `
+    <div class="list-head">
+      <h2>Compras</h2>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCompras()">⭳ CSV</button>
+      </div>
+    </div>
+    <div class="footnote" style="text-align:left;margin-bottom:12px;">El costo contra presupuesto usa el monto <strong>sin ITBMS</strong> (Easy Project está inscrita, así que ese 7% se acredita y no es un costo real). El total con ITBMS sí se usa para calcular lo pendiente de pago.</div>
+    ${isAll ? '<div class="empty-note">Elige un proyecto específico (no "Todos los proyectos") para capturar compras.</div>' : `
+    <div class="actions-row">
+      <button class="btn btn-copper btn-block" onclick="toggleForm('compras')">${formOpen.compras?'✕ Cerrar':'+ Nueva compra'}</button>
+    </div>
+    <div class="form-panel ${formOpen.compras?'open':''}" id="panel-compras">
+      <div class="field">
+        <label>Partida</label>
+        <select id="c-idPartida" onchange="showPartidaInfo('c')">${partidaOptions()}</select>
+        <div class="partida-info" id="c-info"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fecha</label><input type="date" id="c-fecha"></div>
+        <div class="field"><label>Proveedor</label><input type="text" id="c-proveedor" placeholder="Ferretería / Distribuidor"></div>
+      </div>
+      <div class="field">
+        <label>Proveedor del catálogo (opcional, para Cuentas por Pagar)</label>
+        <select id="c-proveedorId" onchange="onProveedorSelectChange('c')">
+          <option value="">— Sin vincular —</option>
+          ${proveedores.map(p=>`<option value="${p.id}">${escapeHtml(p.nombre)} (${p.id})</option>`).join("")}
+          <option value="__nuevo__">+ Nuevo proveedor…</option>
+        </select>
+        <div id="c-proveedor-nuevo-panel" style="display:${proveedorFormOpen.c?'block':'none'};margin-top:8px;" class="catalog-mini">
+          <div class="field" style="margin-bottom:6px;"><input type="text" id="c-proveedor-nombre-nuevo" placeholder="Nombre del proveedor nuevo"></div>
+          <button class="btn btn-ghost btn-sm" onclick="crearProveedorInline('c')">Guardar proveedor</button>
+        </div>
+      </div>
+      <div class="field"><label>Descripción de la compra</label><input type="text" id="c-descripcion" placeholder="Ej. Tubería cobre 3/8"></div>
+      <div class="field-row">
+        <div class="field"><label>Cantidad</label><input type="number" step="0.01" id="c-cantidad" value="1" oninput="recalcCompraPreview()"></div>
+        <div class="field"><label>Costo unitario (sin ITBMS)</label><input type="number" step="0.01" id="c-costoUnit" placeholder="0.00" oninput="recalcCompraPreview()"></div>
+      </div>
+      <div class="partida-info" id="c-itbms-preview">Subtotal: B/. 0.00 · ITBMS (7%): B/. 0.00 · Total: B/. 0.00</div>
+      <div class="field"><label>N° Factura/Recibo</label><input type="text" id="c-factura"></div>
+      <div class="field"><label>Documento (opcional)</label><input type="text" id="c-documento" placeholder="N° de orden / cotización"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-block" id="c-submit-btn" onclick="submitCompra()">Guardar compra</button>
+      </div>
+    </div>`}
+    <div class="footnote" style="margin-bottom:4px;">Total registrado: <strong>${fmtMoney(total)}</strong> · ${filtered.length} compras</div>
+    <div style="text-align:center;margin-bottom:12px;">${syncBadge()}</div>
+    ${rows.length===0 ? '<div class="empty-note">Aún no hay compras registradas.</div>' :
+      rows.map(c=>{
+        const abonado = abonosDeOrigen('compras', c.id);
+        const saldo = Number(c.total) - abonado;
+        const estado = estadoDeSaldo(c.total, abonado);
+        return `
+      <div class="record">
+        <div class="record-top">
+          <div>
+            <div class="record-title">${escapeHtml(c.descripcion)}</div>
+            <div class="record-sub">${escapeHtml(c.proveedor||'—')} · ${c.fecha||'sin fecha'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="record-total">${fmtMoney(c.total)}</div>
+            <button class="btn-del" onclick="deleteRecord('compras','${c.id}', this)" title="Eliminar">🗑</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          <span class="chip chip-cat">${c.idPartida}</span>
+          <span class="chip ${estado==='Pagado'?'chip-pag':estado==='Parcial'?'chip-parcial':'chip-pend'}">${estado}${abonado>0?` · abonado ${fmtMoney(abonado)}`:''}</span>
+          ${c.itbms!==undefined && c.itbms!=="" ? `<span class="chip chip-cat">Base ${fmtMoney(c.subtotal)}</span><span class="chip chip-cat">ITBMS ${fmtMoney(c.itbms)}</span>` : ''}
+          ${c.factura?`<span class="chip chip-cat">#${escapeHtml(c.factura)}</span>`:''}
+          ${c.registradoPor?`<span class="chip chip-cat">${escapeHtml(c.registradoPor)}</span>`:''}
+        </div>
+        ${estado!=='Pagado' && !isAll ? `
+        <div style="margin-top:8px;">
+          ${abonoAbierto && abonoAbierto.tipo==='proveedor' && abonoAbierto.origenId===c.id ? renderMiniAbonoProveedor('compras', c.id, c.proveedor, saldo) :
+            `<button class="btn btn-ghost btn-sm" onclick="abrirAbonoProveedor('compras','${c.id}')">+ Registrar abono (saldo ${fmtMoney(saldo)})</button>`}
+        </div>` : ''}
+      </div>`;}).join("")}
+  `;
+}
+/* =========================================================
+   RENDER: VIÁTICOS
+   No maneja abonos/saldo pendiente: el gasto se paga en el
+   momento, solo varía el método de pago (informativo).
+   ========================================================= */
+function renderViaticos(){
+  const isAll = currentProyecto === "ALL";
+  const filtered = viaticos.filter(v=>matchesProyecto(v,currentProyecto));
+  const rows = [...filtered].reverse();
+  const total = filtered.reduce((s,v)=>s+Number(v.total),0);
+  return `
+    <div class="list-head">
+      <h2>Viáticos</h2>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportViaticos()">⭳ CSV</button>
+        ${!isAll ? `<button class="btn btn-ghost btn-sm" onclick="exportarViaticosPdf()">⭳ PDF</button>` : ''}
+      </div>
+    </div>
+    <div class="footnote" style="text-align:left;margin-bottom:12px;">El costo contra presupuesto usa el monto <strong>neto</strong> (sin ITBMS). No todo servicio con factura legal cobra ITBMS (ej. transporte de pasajeros) — usa "Tiene factura" y "Aplica ITBMS" por separado.</div>
+    ${isAll ? '<div class="empty-note">Elige un proyecto específico (no "Todos los proyectos") para capturar viáticos.</div>' : `
+    <div class="actions-row">
+      <button class="btn btn-copper btn-block" onclick="toggleForm('viaticos')">${formOpen.viaticos?'✕ Cerrar':'+ Nuevo viático'}</button>
+    </div>
+    <div class="form-panel ${formOpen.viaticos?'open':''}" id="panel-viaticos">
+      <div class="field">
+        <label>Partida</label>
+        <select id="v-idPartida" onchange="showPartidaInfo('v')">${partidaOptions()}</select>
+        <div class="partida-info" id="v-info"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fecha</label><input type="date" id="v-fecha"></div>
+        <div class="field"><label>Técnico</label><input type="text" id="v-tecnico"></div>
+      </div>
+      <div class="field">
+        <label>Concepto</label>
+        <select id="v-concepto">
+          <option value="Transporte">Transporte</option>
+          <option value="Alimentación">Alimentación</option>
+          <option value="Hospedaje">Hospedaje</option>
+          <option value="Peaje">Peaje</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="field"><label>Descripción</label><input type="text" id="v-descripcion" placeholder="Detalle del gasto"></div>
+      <div class="field">
+        <label>Método de pago</label>
+        <select id="v-metodoPago">
+          <option value="Efectivo">Efectivo (caja chica)</option>
+          <option value="Tarjeta">Tarjeta</option>
+          <option value="Pago directo">Pago directo</option>
+        </select>
+      </div>
+      <div class="field"><label>Monto (neto)</label><input type="number" step="0.01" id="v-monto" placeholder="0.00" oninput="recalcViaticoPreview()"></div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="v-tieneFactura" style="width:auto;" onchange="onTieneFacturaViaticoChange()"> <label style="margin:0;text-transform:none;font-size:12.5px;">Tiene factura</label>
+      </div>
+      <div class="field" id="v-numeroFiscal-wrap" style="display:none;"><label>N° Fiscal</label><input type="text" id="v-numeroFiscal"></div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="v-aplicaItbms" style="width:auto;" onchange="recalcViaticoPreview()"> <label style="margin:0;text-transform:none;font-size:12.5px;">Aplica ITBMS (7%) — desmarca si es un servicio exento (ej. pasajes/transporte de personas)</label>
+      </div>
+      <div class="partida-info" id="v-itbms-preview">Monto: B/. 0.00 · ITBMS (7%): B/. 0.00 · Total: B/. 0.00</div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-block" id="v-submit-btn" onclick="submitViatico()">Guardar viático</button>
+      </div>
+    </div>`}
+    <div class="footnote" style="margin-bottom:4px;">Total registrado: <strong>${fmtMoney(total)}</strong> · ${filtered.length} viáticos</div>
+    <div style="text-align:center;margin-bottom:12px;">${syncBadge()}</div>
+    ${rows.length===0 ? '<div class="empty-note">Aún no hay viáticos registrados.</div>' :
+      rows.map(v=>{
+        const facturaTxt = (v.tieneFactura==='Sí' && v.aplicaItbms==='No') ? 'Sí (exento ITBMS)' : v.tieneFactura;
+        return `
+      <div class="record">
+        <div class="record-top">
+          <div>
+            <div class="record-title">${escapeHtml(v.descripcion||v.concepto)}</div>
+            <div class="record-sub">${escapeHtml(v.tecnico||'—')} · ${v.fecha||'sin fecha'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="record-total">${fmtMoney(v.total)}</div>
+            <button class="btn-del" onclick="deleteRecord('viaticos','${v.id}', this)" title="Eliminar">🗑</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          <span class="chip chip-cat">${v.idPartida}</span>
+          <span class="chip chip-cat">${escapeHtml(v.concepto)}</span>
+          <span class="chip chip-cat">${escapeHtml(v.metodoPago)}</span>
+          <span class="chip chip-cat">Factura: ${escapeHtml(facturaTxt)}</span>
+          ${v.registradoPor?`<span class="chip chip-cat">${escapeHtml(v.registradoPor)}</span>`:''}
+        </div>
+      </div>`;}).join("")}
+  `;
+}
+function showPartidaInfo(prefix){
+  const sel = document.getElementById(prefix+"-idPartida");
+  const info = document.getElementById(prefix+"-info");
+  if(!sel || !info) return;
+  const p = getPartida(currentProyecto, sel.value);
+  if(!p){ info.textContent=""; return; }
+  const parts = computePartidas(currentProyecto);
+  const cp = parts.find(x=>x.id===p.id);
+  info.textContent = `Presupuesto: ${fmtMoney(p.totalPresup)} · Consumido: ${fmtPct(cp.pct)} · Saldo: ${fmtMoney(p.totalPresup-cp.gastado)}`;
+}
+function recalcCompraPreview(){
+  const el = document.getElementById("c-itbms-preview");
+  if(!el) return;
+  const cantidad = parseFloat(document.getElementById("c-cantidad").value)||0;
+  const costoUnit = parseFloat(document.getElementById("c-costoUnit").value)||0;
+  const subtotal = cantidad*costoUnit;
+  const itbms = subtotal*ITBMS_RATE;
+  el.textContent = `Subtotal: ${fmtMoney(subtotal)} · ITBMS (7%): ${fmtMoney(itbms)} · Total: ${fmtMoney(subtotal+itbms)}`;
+}
+function toggleForm(which){
+  formOpen[which] = !formOpen[which];
+  renderTab();
+  setTimeout(()=>{
+    const prefix = which==='compras'?'c':which==='mano'?'m':which==='viaticos'?'v':which==='extras'?'e':'g';
+    showPartidaInfo(prefix);
+    if(which==='compras') recalcCompraPreview();
+    if(which==='mano'){ recalcManoPreview(); onTipoManoChange(); }
+    if(which==='viaticos') recalcViaticoPreview();
+    if(which==='extras') recalcExtraPreview();
+    if(which==='generales') recalcGeneralPreview();
+  },0);
+}
+async function submitCompra(){
+  if(currentProyecto==="ALL") return;
+  const idPartida = document.getElementById("c-idPartida").value;
+  const cantidad = parseFloat(document.getElementById("c-cantidad").value)||0;
+  const costoUnit = parseFloat(document.getElementById("c-costoUnit").value)||0;
+  const descripcion = document.getElementById("c-descripcion").value.trim();
+  if(!descripcion || costoUnit<=0){ showToast("Completa descripción y costo"); return; }
+  const p = getPartida(currentProyecto, idPartida);
+  const subtotal = +(cantidad*costoUnit).toFixed(2);
+  const itbms = +(subtotal*ITBMS_RATE).toFixed(2);
+  const rec = {
+    id: uid(), proyecto: currentProyecto, fecha: document.getElementById("c-fecha").value,
+    proveedor: document.getElementById("c-proveedor").value.trim(),
+    proveedorId: document.getElementById("c-proveedorId").value==='__nuevo__' ? '' : document.getElementById("c-proveedorId").value,
+    documento: document.getElementById("c-documento").value.trim(),
+    descripcion, cantidad, costoUnit, subtotal, itbms, total: +(subtotal+itbms).toFixed(2),
+    idPartida, categoria: p?p.categoria:"", tipo: p?p.tipo:"",
+    factura: document.getElementById("c-factura").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const btn = document.getElementById("c-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd("compras", rec);
+  if(r.ok){
+    compras.push(rec);
+    formOpen.compras = false;
+    showToast("Compra guardada en Google Sheets");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar compra";
+    showToast("No se pudo guardar (sin conexión). Vuelve a intentar sin cerrar el formulario.");
+  }
+}
+/* =========================================================
+   VIÁTICOS — preview, N° fiscal y guardado
+   ========================================================= */
+function recalcViaticoPreview(){
+  const el = document.getElementById("v-itbms-preview");
+  if(!el) return;
+  const monto = parseFloat(document.getElementById("v-monto").value)||0;
+  const aplicaItbms = document.getElementById("v-aplicaItbms").checked;
+  const itbms = aplicaItbms ? +(monto*ITBMS_RATE).toFixed(2) : 0;
+  el.textContent = `Monto: ${fmtMoney(monto)} · ITBMS (7%): ${fmtMoney(itbms)} · Total: ${fmtMoney(monto+itbms)}`;
+}
+function onTieneFacturaViaticoChange(){
+  const chk = document.getElementById("v-tieneFactura");
+  document.getElementById("v-numeroFiscal-wrap").style.display = chk.checked ? "block" : "none";
+  // Por defecto, factura = aplica ITBMS — pero queda editable para casos
+  // exentos por ley (ej. pasajes/transporte de personas).
+  document.getElementById("v-aplicaItbms").checked = chk.checked;
+  recalcViaticoPreview();
+}
+async function submitViatico(){
+  if(currentProyecto==="ALL") return;
+  const idPartida = document.getElementById("v-idPartida").value;
+  const monto = parseFloat(document.getElementById("v-monto").value)||0;
+  const tecnico = document.getElementById("v-tecnico").value.trim();
+  if(!tecnico || monto<=0){ showToast("Completa técnico y monto"); return; }
+  const aplicaItbms = document.getElementById("v-aplicaItbms").checked;
+  const itbms = aplicaItbms ? +(monto*ITBMS_RATE).toFixed(2) : 0;
+  const rec = {
+    id: uid(), proyecto: currentProyecto, idPartida,
+    fecha: document.getElementById("v-fecha").value,
+    tecnico,
+    concepto: document.getElementById("v-concepto").value,
+    descripcion: document.getElementById("v-descripcion").value.trim(),
+    metodoPago: document.getElementById("v-metodoPago").value,
+    monto, tieneFactura: document.getElementById("v-tieneFactura").checked ? "Sí" : "No",
+    aplicaItbms: aplicaItbms ? "Sí" : "No",
+    itbms, total: +(monto+itbms).toFixed(2),
+    numeroFiscal: document.getElementById("v-numeroFiscal").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const btn = document.getElementById("v-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd("viaticos", rec);
+  if(r.ok){
+    viaticos.push(rec);
+    formOpen.viaticos = false;
+    showToast("Viático guardado en Google Sheets");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar viático";
+    showToast("No se pudo guardar (sin conexión). Vuelve a intentar sin cerrar el formulario.");
+  }
+}
+async function exportarViaticosPdf(){
+  if(currentProyecto==="ALL") return;
+  showToast("Generando PDF…");
+  try{
+    const url = SHEETS_API_URL + "?action=exportarReporteViaticosPdf&proyectoId=" + encodeURIComponent(currentProyecto);
+    const data = await jsonpWithRetry(url, 30000, 1);
+    if(!data.ok || !data.pdf) throw new Error(data.error||"Error desconocido del servidor");
+    const link = document.createElement("a");
+    link.href = "data:application/pdf;base64," + data.pdf.base64;
+    link.download = data.pdf.nombreArchivo;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }catch(e){
+    showToast("No se pudo generar el PDF: " + (e.message||e));
+  }
+}
+
+async function exportarReporteRentabilidadPdf(tipo){
+  if(currentProyecto==="ALL") return;
+  showToast("Generando PDF…");
+  try{
+    const url = SHEETS_API_URL + "?action=exportarReporteRentabilidadPdf&proyectoId=" + encodeURIComponent(currentProyecto) + "&tipo=" + encodeURIComponent(tipo);
+    const data = await jsonpWithRetry(url, 30000, 1);
+    if(!data.ok || !data.pdf) throw new Error(data.error||"Error desconocido del servidor");
+    const link = document.createElement("a");
+    link.href = "data:application/pdf;base64," + data.pdf.base64;
+    link.download = data.pdf.nombreArchivo;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }catch(e){
+    showToast("No se pudo generar el PDF: " + (e.message||e));
+  }
+}
+function onProveedorSelectChange(prefix){
+  const sel = document.getElementById(prefix+"-proveedorId");
+  if(sel.value==='__nuevo__'){
+    proveedorFormOpen[prefix] = true;
+    document.getElementById(prefix+"-proveedor-nuevo-panel").style.display = 'block';
+  }
+}
+async function crearProveedorInline(prefix){
+  const nombre = document.getElementById(prefix+"-proveedor-nombre-nuevo").value.trim();
+  if(!nombre){ showToast("Escribe el nombre del proveedor"); return; }
+  const rec = {
+    id: 'PRV-' + String(proveedores.length+1).padStart(4,'0'),
+    nombre, telefono:"", correo:"", contacto:"", notas:"",
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const r = await apiAdd("proveedores", rec);
+  if(r.ok){
+    proveedores.push(rec);
+    proveedorFormOpen[prefix] = false;
+    showToast("Proveedor creado: " + rec.id);
+    renderTab();
+    setTimeout(()=>{ const s = document.getElementById(prefix+"-proveedorId"); if(s) s.value = rec.id; }, 0);
+  }else{
+    showToast("No se pudo crear el proveedor (sin conexión).");
+  }
+}
+function toggleProveedoresPanel(){
+  proveedoresPanelOpen = !proveedoresPanelOpen;
+  editingProveedorId = null;
+  renderTab();
+}
+function renderProveedoresPanel(){
+  return `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="list-head" style="margin-bottom:${proveedoresPanelOpen?'12px':'0'};">
+        <div class="section-title" style="margin-bottom:0;">Proveedores <span class="tag">${proveedores.length}</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleProveedoresPanel()">${proveedoresPanelOpen?'Ocultar':'Gestionar'}</button>
+      </div>
+      ${proveedoresPanelOpen ? `
+        <div class="form-panel open" style="margin-bottom:10px;">
+          <div class="field"><label>Nombre</label><input type="text" id="pv-nombre" placeholder="Nombre del proveedor"></div>
+          <div class="field-row">
+            <div class="field"><label>Teléfono</label><input type="text" id="pv-telefono"></div>
+            <div class="field"><label>Correo</label><input type="text" id="pv-correo"></div>
+          </div>
+          <div class="field"><label>Contacto (opcional)</label><input type="text" id="pv-contacto"></div>
+          <div class="field"><label>Notas (opcional)</label><input type="text" id="pv-notas"></div>
+          <div class="form-actions"><button class="btn btn-primary btn-block" id="pv-submit-btn" onclick="submitProveedorPanel()">${editingProveedorId?'Guardar cambios':'Guardar proveedor nuevo'}</button></div>
+        </div>
+        ${proveedores.length===0 ? '<div class="empty-note">Aún no hay proveedores registrados.</div>' :
+          proveedores.map(p=>`
+          <div class="record">
+            <div class="record-top">
+              <div><div class="record-title">${escapeHtml(p.nombre)}</div><div class="record-sub">${escapeHtml(p.telefono||'—')} · ${escapeHtml(p.correo||'—')}</div></div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="version-pill">${escapeHtml(p.id)}</span>
+                <button class="btn btn-ghost btn-sm" onclick="editarProveedorPanel('${p.id}')">Editar</button>
+              </div>
+            </div>
+          </div>`).join("")}
+      ` : ''}
+    </div>
+  `;
+}
+function editarProveedorPanel(id){
+  const p = proveedores.find(x=>x.id===id); if(!p) return;
+  editingProveedorId = id;
+  renderTab();
+  setTimeout(()=>{
+    document.getElementById("pv-nombre").value = p.nombre||'';
+    document.getElementById("pv-telefono").value = p.telefono||'';
+    document.getElementById("pv-correo").value = p.correo||'';
+    document.getElementById("pv-contacto").value = p.contacto||'';
+    document.getElementById("pv-notas").value = p.notas||'';
+  }, 0);
+}
+async function submitProveedorPanel(){
+  const nombre = document.getElementById("pv-nombre").value.trim();
+  if(!nombre){ showToast("Escribe el nombre del proveedor"); return; }
+  const btn = document.getElementById("pv-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  if(editingProveedorId){
+    const original = proveedores.find(p=>p.id===editingProveedorId);
+    const rec = Object.assign({}, original, {
+      nombre,
+      telefono: document.getElementById("pv-telefono").value.trim(),
+      correo: document.getElementById("pv-correo").value.trim(),
+      contacto: document.getElementById("pv-contacto").value.trim(),
+      notas: document.getElementById("pv-notas").value.trim()
+    });
+    const r = await apiUpdate("proveedores", editingProveedorId, rec);
+    if(r.ok){
+      const idx = proveedores.findIndex(p=>p.id===editingProveedorId);
+      proveedores[idx] = rec;
+      editingProveedorId = null;
+      showToast("Proveedor actualizado");
+      renderTab();
+    }else{
+      btn.disabled = false; btn.textContent = "Guardar cambios";
+      showToast("No se pudo actualizar (sin conexión).");
+    }
+    return;
+  }
+  const rec = {
+    id: 'PRV-' + String(proveedores.length+1).padStart(4,'0'),
+    nombre,
+    telefono: document.getElementById("pv-telefono").value.trim(),
+    correo: document.getElementById("pv-correo").value.trim(),
+    contacto: document.getElementById("pv-contacto").value.trim(),
+    notas: document.getElementById("pv-notas").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const r = await apiAdd("proveedores", rec);
+  if(r.ok){
+    proveedores.push(rec);
+    showToast("Proveedor guardado: " + rec.id);
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar proveedor nuevo";
+    showToast("No se pudo guardar (sin conexión).");
+  }
+}
+/* ---------- Abonos a Proveedor (Cuentas por Pagar) ---------- */
+function abrirAbonoProveedor(origenTabla, origenId){
+  abonoAbierto = { tipo:'proveedor', origenTabla, origenId };
+  renderTab();
+}
+function cerrarAbono(){ abonoAbierto = null; renderTab(); }
+function renderMiniAbonoProveedor(origenTabla, origenId, proveedorNombre, saldo){
+  return `
+    <div class="catalog-mini" style="margin-top:6px;">
+      <div class="field-row" style="margin-bottom:6px;">
+        <div class="field" style="margin-bottom:0;"><input type="date" id="ap-fecha"></div>
+        <div class="field" style="margin-bottom:0;"><input type="number" step="0.01" id="ap-monto" placeholder="Monto (saldo ${fmtMoney(saldo)})"></div>
+      </div>
+      <div class="field-row" style="margin-bottom:6px;">
+        <div class="field" style="margin-bottom:0;"><input type="text" id="ap-metodo" placeholder="Método (transferencia, cheque...)"></div>
+        <div class="field" style="margin-bottom:0;"><input type="text" id="ap-referencia" placeholder="Referencia (opcional)"></div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-verde btn-sm" onclick="submitAbonoProveedor('${origenTabla}','${origenId}','${escapeHtml(proveedorNombre||'')}')">Guardar abono</button>
+        <button class="btn btn-ghost btn-sm" onclick="cerrarAbono()">Cancelar</button>
+      </div>
+    </div>`;
+}
+async function submitAbonoProveedor(origenTabla, origenId, proveedorNombre){
+  const monto = parseFloat(document.getElementById("ap-monto").value)||0;
+  if(monto<=0){ showToast("Ingresa un monto válido"); return; }
+  const rec = {
+    id: uid(), origenTabla, origenId, proyecto: currentProyecto, proveedorNombre,
+    fecha: document.getElementById("ap-fecha").value,
+    monto, metodoPago: document.getElementById("ap-metodo").value.trim(),
+    referencia: document.getElementById("ap-referencia").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const r = await apiAdd("abonosProveedor", rec);
+  if(r.ok){
+    abonosProveedor.push(rec);
+    abonoAbierto = null;
+    showToast("Abono registrado");
+    renderTab();
+  }else{
+    showToast("No se pudo guardar (sin conexión).");
+  }
+}
+
+/* =========================================================
+   RENDER: MANO DE OBRA
+   ========================================================= */
+function renderManoObra(){
+  const isAll = currentProyecto === "ALL";
+  const filtered = manoObra.filter(m=>matchesProyecto(m,currentProyecto));
+  const rows = [...filtered].reverse();
+  const total = filtered.reduce((s,m)=>s+Number(m.total),0);
+  return `
+    <div class="list-head">
+      <h2>Mano de Obra</h2>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportManoObra()">⭳ CSV</button>
+      </div>
+    </div>
+    ${isAll ? '<div class="empty-note">Elige un proyecto específico (no "Todos los proyectos") para capturar horas.</div>' : `
+    <div class="actions-row">
+      <button class="btn btn-copper btn-block" onclick="toggleForm('mano')">${formOpen.mano?'✕ Cerrar':'+ Nuevo registro'}</button>
+    </div>
+    <div class="form-panel ${formOpen.mano?'open':''}" id="panel-mano">
+      <div class="field">
+        <label>Partida</label>
+        <select id="m-idPartida" onchange="showPartidaInfo('m')">${partidaOptions()}</select>
+        <div class="partida-info" id="m-info"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fecha</label><input type="date" id="m-fecha"></div>
+        <div class="field"><label>Técnico / Cuadrilla</label><input type="text" id="m-tecnico" placeholder="Ej. Cuadrilla 2 / Nombre del subcontratista"></div>
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <select id="m-tipoMano" onchange="onTipoManoChange()">
+          <option value="Empleado">Empleado propio (sin ITBMS)</option>
+          <option value="SubcontratistaSinFactura">Subcontratista sin factura (persona natural, sin ITBMS)</option>
+          <option value="Subcontratista">Subcontratista con factura (con ITBMS)</option>
+        </select>
+      </div>
+      <div id="m-campos-empleado" class="field-row">
+        <div class="field"><label>Horas</label><input type="number" step="0.25" id="m-horas" placeholder="0" oninput="recalcManoPreview()"></div>
+        <div class="field"><label>Costo por hora</label><input type="number" step="0.01" id="m-costoHora" placeholder="0.00" oninput="recalcManoPreview()"></div>
+      </div>
+      <div id="m-campos-subcontratista" style="display:none;">
+        <div class="field"><label>Monto total acordado</label><input type="number" step="0.01" id="m-montoTotal" placeholder="0.00" oninput="recalcManoPreview()"></div>
+        <div class="field"><label>Descripción del trabajo realizado</label><input type="text" id="m-descripcionTrabajo" placeholder="Ej. Instalación de ductería nivel 3"></div>
+      </div>
+      <div class="field">
+        <label>Proveedor del catálogo (opcional, si es cualquiera de los dos tipos de subcontratista)</label>
+        <select id="m-proveedorId" onchange="onProveedorSelectChange('m')">
+          <option value="">— Sin vincular —</option>
+          ${proveedores.map(p=>`<option value="${p.id}">${escapeHtml(p.nombre)} (${p.id})</option>`).join("")}
+          <option value="__nuevo__">+ Nuevo proveedor…</option>
+        </select>
+        <div id="m-proveedor-nuevo-panel" style="display:${proveedorFormOpen.m?'block':'none'};margin-top:8px;" class="catalog-mini">
+          <div class="field" style="margin-bottom:6px;"><input type="text" id="m-proveedor-nombre-nuevo" placeholder="Nombre del proveedor nuevo"></div>
+          <button class="btn btn-ghost btn-sm" onclick="crearProveedorInline('m')">Guardar proveedor</button>
+        </div>
+      </div>
+      <div class="partida-info" id="m-itbms-preview">Total: B/. 0.00</div>
+      <div class="field"><label>Observaciones (opcional)</label><textarea id="m-obs"></textarea></div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-block" id="m-submit-btn" onclick="submitManoObra()">Guardar registro</button>
+      </div>
+    </div>`}
+    <div class="footnote" style="margin-bottom:4px;">Total registrado: <strong>${fmtMoney(total)}</strong> · ${filtered.length} registros</div>
+    <div style="text-align:center;margin-bottom:12px;">${syncBadge()}</div>
+    ${rows.length===0 ? '<div class="empty-note">Aún no hay horas registradas.</div>' :
+      rows.map(m=>{
+        const abonado = abonosDeOrigen('mano_obra', m.id);
+        const saldo = Number(m.total) - abonado;
+        const estado = estadoDeSaldo(m.total, abonado);
+        return `
+      <div class="record">
+        <div class="record-top">
+          <div>
+            <div class="record-title">${escapeHtml(m.tecnico||'Cuadrilla')}</div>
+            <div class="record-sub">${(m.tipoMano==='Subcontratista'||m.tipoMano==='SubcontratistaSinFactura') ? escapeHtml(m.descripcionTrabajo||'Trabajo acordado') : `${m.horas} h × ${fmtMoney(m.costoHora)}`} · ${m.fecha||'sin fecha'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="record-total">${fmtMoney(m.total)}</div>
+            <button class="btn-del" onclick="deleteRecord('mano_obra','${m.id}', this)" title="Eliminar">🗑</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          <span class="chip chip-cat">${m.idPartida}</span>
+          <span class="chip ${estado==='Pagado'?'chip-pag':estado==='Parcial'?'chip-parcial':'chip-pend'}">${estado}${abonado>0?` · abonado ${fmtMoney(abonado)}`:''}</span>
+          ${m.tipoMano==='Subcontratista'?`<span class="chip chip-cat">Subcontratista · ITBMS ${fmtMoney(m.itbms)}</span>`:m.tipoMano==='SubcontratistaSinFactura'?'<span class="chip chip-cat">Subcontratista sin factura</span>':'<span class="chip chip-cat">Empleado propio</span>'}
+          ${m.registradoPor?`<span class="chip chip-cat">${escapeHtml(m.registradoPor)}</span>`:''}
+        </div>
+        ${estado!=='Pagado' && !isAll ? `
+        <div style="margin-top:8px;">
+          ${abonoAbierto && abonoAbierto.tipo==='proveedor' && abonoAbierto.origenId===m.id ? renderMiniAbonoProveedor('mano_obra', m.id, m.tecnico, saldo) :
+            `<button class="btn btn-ghost btn-sm" onclick="abrirAbonoProveedor('mano_obra','${m.id}')">+ Registrar abono (saldo ${fmtMoney(saldo)})</button>`}
+        </div>` : ''}
+      </div>`;}).join("")}
+  `;
+}
+function onTipoManoChange(){
+  const tipo = document.getElementById("m-tipoMano").value;
+  const esSubcontratista = (tipo==='Subcontratista' || tipo==='SubcontratistaSinFactura');
+  document.getElementById("m-campos-empleado").style.display = esSubcontratista ? 'none' : 'grid';
+  document.getElementById("m-campos-subcontratista").style.display = esSubcontratista ? 'block' : 'none';
+  recalcManoPreview();
+}
+function recalcManoPreview(){
+  const el = document.getElementById("m-itbms-preview");
+  if(!el) return;
+  const tipo = document.getElementById("m-tipoMano").value;
+  const esSubcontratista = (tipo==='Subcontratista' || tipo==='SubcontratistaSinFactura');
+  const subtotal = esSubcontratista
+    ? (parseFloat(document.getElementById("m-montoTotal").value)||0)
+    : (parseFloat(document.getElementById("m-horas").value)||0) * (parseFloat(document.getElementById("m-costoHora").value)||0);
+  const itbms = tipo==='Subcontratista' ? subtotal*ITBMS_RATE : 0;
+  el.textContent = tipo==='Subcontratista'
+    ? `Subtotal: ${fmtMoney(subtotal)} · ITBMS (7%): ${fmtMoney(itbms)} · Total: ${fmtMoney(subtotal+itbms)}`
+    : `Total: ${fmtMoney(subtotal)} (sin ITBMS)`;
+}
+async function submitManoObra(){
+  if(currentProyecto==="ALL") return;
+  const idPartida = document.getElementById("m-idPartida").value;
+  const tipoMano = document.getElementById("m-tipoMano").value;
+  const esSubcontratista = (tipoMano==='Subcontratista' || tipoMano==='SubcontratistaSinFactura');
+  let horas=0, costoHora=0, montoTotal=0, descripcionTrabajo="";
+  if(esSubcontratista){
+    montoTotal = parseFloat(document.getElementById("m-montoTotal").value)||0;
+    descripcionTrabajo = document.getElementById("m-descripcionTrabajo").value.trim();
+    if(montoTotal<=0){ showToast("Ingresa el monto acordado"); return; }
+    if(!descripcionTrabajo){ showToast("Describe el trabajo realizado"); return; }
+  }else{
+    horas = parseFloat(document.getElementById("m-horas").value)||0;
+    costoHora = parseFloat(document.getElementById("m-costoHora").value)||0;
+    if(horas<=0 || costoHora<=0){ showToast("Completa horas y costo/hora"); return; }
+  }
+  const p = getPartida(currentProyecto, idPartida);
+  const subtotal = esSubcontratista ? montoTotal : +(horas*costoHora).toFixed(2);
+  const itbms = tipoMano==='Subcontratista' ? +(subtotal*ITBMS_RATE).toFixed(2) : 0;
+  const rec = {
+    id: uid(), proyecto: currentProyecto, fecha: document.getElementById("m-fecha").value,
+    tecnico: document.getElementById("m-tecnico").value.trim(),
+    proveedorId: document.getElementById("m-proveedorId").value==='__nuevo__' ? '' : document.getElementById("m-proveedorId").value,
+    idPartida, categoria: p?p.categoria:"", tipoMano,
+    horas, costoHora, montoTotal, descripcionTrabajo,
+    subtotal, itbms, total: +(subtotal+itbms).toFixed(2),
+    obs: document.getElementById("m-obs").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const btn = document.getElementById("m-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd("mano_obra", rec);
+  if(r.ok){
+    manoObra.push(rec);
+    formOpen.mano = false;
+    showToast("Registro guardado en Google Sheets");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar registro";
+    showToast("No se pudo guardar (sin conexión). Vuelve a intentar sin cerrar el formulario.");
+  }
+}
+
+/* =========================================================
+   RENDER: EXTRAS
+   ========================================================= */
+function renderExtras(){
+  const isAll = currentProyecto === "ALL";
+  const filtered = extras.filter(e=>matchesProyecto(e,currentProyecto));
+  const rows = [...filtered].reverse();
+  return `
+    <div class="list-head">
+      <h2>Extras y Cambios</h2>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportExtras()">⭳ CSV</button>
+      </div>
+    </div>
+    ${isAll ? '<div class="empty-note">Elige un proyecto específico (no "Todos los proyectos") para capturar extras.</div>' : `
+    <div class="actions-row">
+      <button class="btn btn-copper btn-block" onclick="toggleForm('extras')">${formOpen.extras?'✕ Cerrar':'+ Nuevo extra'}</button>
+    </div>
+    <div class="form-panel ${formOpen.extras?'open':''}" id="panel-extras">
+      <div class="field"><label>Fecha</label><input type="date" id="e-fecha"></div>
+      <div class="field"><label>Descripción del cambio/extra</label><textarea id="e-descripcion" placeholder="Ej. Cambio de rejillas en nivel 300 por especificación de diseño"></textarea></div>
+      <div class="field"><label>Partida / Nivel relacionado</label><input type="text" id="e-nivel" placeholder="Ej. Nivel 300 · SUM-REJ"></div>
+      <div class="field-row">
+        <div class="field"><label>Venta adicional</label><input type="number" step="0.01" id="e-venta" placeholder="0.00" oninput="recalcExtraPreview()"></div>
+        <div class="field"><label>Costo estimado</label><input type="number" step="0.01" id="e-costo" placeholder="0.00" oninput="recalcExtraPreview()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+          <input type="checkbox" id="e-ventaConItbms" checked onchange="recalcExtraPreview()" style="width:auto;">
+          <label style="margin:0;text-transform:none;font-size:12.5px;">La venta al cliente lleva ITBMS</label>
+        </div>
+        <div class="field" style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+          <input type="checkbox" id="e-costoConItbms" onchange="recalcExtraPreview()" style="width:auto;">
+          <label style="margin:0;text-transform:none;font-size:12.5px;">El costo lleva ITBMS (factura)</label>
+        </div>
+      </div>
+      <div class="partida-info" id="e-itbms-preview">Venta: B/. 0.00 · Costo: B/. 0.00</div>
+      <div class="field"><label>Estado</label>
+        <select id="e-estado"><option>Pendiente Aprobación</option><option>Aprobado</option><option>Rechazado</option><option>Ejecutado</option></select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-block" id="e-submit-btn" onclick="submitExtra()">Guardar extra</button>
+      </div>
+    </div>`}
+    <div style="text-align:center;margin-bottom:12px;">${syncBadge()}</div>
+    ${rows.length===0 ? '<div class="empty-note">Aún no hay extras registrados.</div>' :
+      rows.map(e=>{
+        const rent = Number(e.ventaAdicional)-Number(e.costoEstimado);
+        const chipClass = e.estado==='Aprobado'||e.estado==='Ejecutado' ? 'chip-pag' : e.estado==='Rechazado' ? 'chip-pend' : 'chip-parcial';
+        return `
+      <div class="record">
+        <div class="record-top">
+          <div>
+            <div class="record-title">${escapeHtml(e.descripcion)}</div>
+            <div class="record-sub">${escapeHtml(e.nivelPartida||'—')} · ${e.fecha||'sin fecha'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="record-total" style="color:${rent>=0?'var(--verde)':'var(--rojo)'}">${fmtMoney(rent)}</div>
+            <button class="btn-del" onclick="deleteRecord('extras','${e.id}', this)" title="Eliminar">🗑</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          <span class="chip ${chipClass}">${e.estado}</span>
+          <span class="chip chip-cat">Venta ${fmtMoney(e.ventaAdicional)}${e.ventaConItbms?` +ITBMS ${fmtMoney(e.itbmsVenta)}`:' (sin ITBMS)'}</span>
+          <span class="chip chip-cat">Costo ${fmtMoney(e.costoEstimado)}${e.costoConItbms?` +ITBMS ${fmtMoney(e.itbmsCosto)}`:' (sin ITBMS)'}</span>
+          ${e.registradoPor?`<span class="chip chip-cat">${escapeHtml(e.registradoPor)}</span>`:''}
+        </div>
+      </div>`;}).join("")}
+  `;
+}
+function recalcExtraPreview(){
+  const el = document.getElementById("e-itbms-preview");
+  if(!el) return;
+  const venta = parseFloat(document.getElementById("e-venta").value)||0;
+  const costo = parseFloat(document.getElementById("e-costo").value)||0;
+  const ventaConItbms = document.getElementById("e-ventaConItbms").checked;
+  const costoConItbms = document.getElementById("e-costoConItbms").checked;
+  const itbmsVenta = ventaConItbms ? venta*ITBMS_RATE : 0;
+  const itbmsCosto = costoConItbms ? costo*ITBMS_RATE : 0;
+  el.textContent = `Venta: ${fmtMoney(venta)}${ventaConItbms?` + ITBMS ${fmtMoney(itbmsVenta)}`:' (sin ITBMS)'} · Costo: ${fmtMoney(costo)}${costoConItbms?` + ITBMS ${fmtMoney(itbmsCosto)}`:' (sin ITBMS)'}`;
+}
+async function submitExtra(){
+  if(currentProyecto==="ALL") return;
+  const descripcion = document.getElementById("e-descripcion").value.trim();
+  const venta = parseFloat(document.getElementById("e-venta").value)||0;
+  const costo = parseFloat(document.getElementById("e-costo").value)||0;
+  if(!descripcion){ showToast("Describe el extra o cambio"); return; }
+  const ventaConItbms = document.getElementById("e-ventaConItbms").checked;
+  const costoConItbms = document.getElementById("e-costoConItbms").checked;
+  const rec = {
+    id: uid(), proyecto: currentProyecto, fecha: document.getElementById("e-fecha").value,
+    descripcion, nivelPartida: document.getElementById("e-nivel").value.trim(),
+    ventaAdicional: venta, ventaConItbms, itbmsVenta: ventaConItbms ? +(venta*ITBMS_RATE).toFixed(2) : 0,
+    costoEstimado: costo, costoConItbms, itbmsCosto: costoConItbms ? +(costo*ITBMS_RATE).toFixed(2) : 0,
+    estado: document.getElementById("e-estado").value,
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const btn = document.getElementById("e-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd("extras", rec);
+  if(r.ok){
+    extras.push(rec);
+    formOpen.extras = false;
+    showToast("Extra guardado en Google Sheets");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar extra";
+    showToast("No se pudo guardar (sin conexión). Vuelve a intentar sin cerrar el formulario.");
+  }
+}
+
+/* =========================================================
+   RENDER: GASTOS GENERALES
+   ========================================================= */
+function renderGenerales(){
+  const isAll = currentProyecto === "ALL";
+  const filtered = generales.filter(g=>matchesProyecto(g,currentProyecto));
+  const rows = [...filtered].reverse();
+  const total = filtered.reduce((s,g)=>s+Number(g.monto),0);
+  return `
+    <div class="list-head">
+      <h2>Gastos Generales</h2>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportGenerales()">⭳ CSV</button>
+      </div>
+    </div>
+    <div class="footnote" style="text-align:left;margin-bottom:12px;">Fianzas, pólizas y permisos no ligados a una partida específica. Se reparten proporcionalmente entre todas las partidas de este proyecto según su peso en el presupuesto.</div>
+    ${isAll ? '<div class="empty-note">Elige un proyecto específico (no "Todos los proyectos") para capturar gastos generales.</div>' : `
+    <div class="actions-row">
+      <button class="btn btn-copper btn-block" onclick="toggleForm('generales')">${formOpen.generales?'✕ Cerrar':'+ Nuevo gasto general'}</button>
+    </div>
+    <div class="form-panel ${formOpen.generales?'open':''}" id="panel-generales">
+      <div class="field"><label>Concepto</label><input type="text" id="g-concepto" placeholder="Ej. Fianza de cumplimiento"></div>
+      <div class="field"><label>Descripción (opcional)</label><input type="text" id="g-descripcion"></div>
+      <div class="field-row">
+        <div class="field"><label>Fecha</label><input type="date" id="g-fecha"></div>
+        <div class="field"><label>Monto</label><input type="number" step="0.01" id="g-monto" placeholder="0.00" oninput="recalcGeneralPreview()"></div>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="g-conItbms" onchange="recalcGeneralPreview()" style="width:auto;">
+        <label style="margin:0;text-transform:none;font-size:12.5px;">Este gasto lleva ITBMS (pólizas/fianzas normalmente no)</label>
+      </div>
+      <div class="partida-info" id="g-itbms-preview">Total: B/. 0.00</div>
+      <div class="field"><label>Estado de pago</label><select id="g-estadoPago"><option>Pendiente</option><option>Pagado</option></select></div>
+      <div class="field"><label>Notas (opcional)</label><textarea id="g-notas"></textarea></div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-block" id="g-submit-btn" onclick="submitGeneral()">Guardar gasto</button>
+      </div>
+    </div>`}
+    <div class="footnote" style="margin-bottom:4px;">Total: <strong>${fmtMoney(total)}</strong> · ${filtered.length} gastos</div>
+    <div style="text-align:center;margin-bottom:12px;">${syncBadge()}</div>
+    ${rows.length===0 ? '<div class="empty-note">Sin gastos generales registrados.</div>' :
+      rows.map(g=>`
+      <div class="record">
+        <div class="record-top">
+          <div>
+            <div class="record-title">${escapeHtml(g.concepto)}</div>
+            <div class="record-sub">${escapeHtml(g.descripcion||'—')} · ${g.fecha||'sin fecha'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="record-total">${fmtMoney(g.monto)}</div>
+            <button class="btn-del" onclick="deleteRecord('generales','${g.id}', this)" title="Eliminar">🗑</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          <span class="chip ${g.estadoPago==='Pagado'?'chip-pag':'chip-pend'}">${g.estadoPago}</span>
+          ${g.conItbms?`<span class="chip chip-cat">+ITBMS ${fmtMoney(g.itbms)}</span>`:'<span class="chip chip-cat">Sin ITBMS</span>'}
+          ${g.registradoPor?`<span class="chip chip-cat">${escapeHtml(g.registradoPor)}</span>`:''}
+        </div>
+      </div>`).join("")}
+  `;
+}
+function recalcGeneralPreview(){
+  const el = document.getElementById("g-itbms-preview");
+  if(!el) return;
+  const monto = parseFloat(document.getElementById("g-monto").value)||0;
+  const conItbms = document.getElementById("g-conItbms").checked;
+  const itbms = conItbms ? monto*ITBMS_RATE : 0;
+  el.textContent = conItbms ? `Base: ${fmtMoney(monto)} · ITBMS (7%): ${fmtMoney(itbms)} · Total: ${fmtMoney(monto+itbms)}` : `Total: ${fmtMoney(monto)} (sin ITBMS)`;
+}
+async function submitGeneral(){
+  if(currentProyecto==="ALL") return;
+  const concepto = document.getElementById("g-concepto").value.trim();
+  const monto = parseFloat(document.getElementById("g-monto").value)||0;
+  if(!concepto || monto<=0){ showToast("Completa concepto y monto"); return; }
+  const conItbms = document.getElementById("g-conItbms").checked;
+  const itbms = conItbms ? +(monto*ITBMS_RATE).toFixed(2) : 0;
+  const rec = {
+    id: uid(), proyecto: currentProyecto, concepto, descripcion: document.getElementById("g-descripcion").value.trim(),
+    fecha: document.getElementById("g-fecha").value, monto, conItbms, itbms, totalConItbms: +(monto+itbms).toFixed(2),
+    estadoPago: document.getElementById("g-estadoPago").value,
+    notas: document.getElementById("g-notas").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const btn = document.getElementById("g-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd("generales", rec);
+  if(r.ok){
+    generales.push(rec);
+    formOpen.generales = false;
+    showToast("Gasto guardado en Google Sheets");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar gasto";
+    showToast("No se pudo guardar (sin conexión). Vuelve a intentar sin cerrar el formulario.");
+  }
+}
+
+/* =========================================================
+   RENDER: FACTURACIÓN (Cuentas por Cobrar / Cuentas por Pagar)
+   ========================================================= */
+function renderFacturacion(){
+  const isAll = currentProyecto === "ALL";
+  return `
+    <div class="list-head"><h2>Facturación</h2>
+      <button class="btn btn-ghost btn-icon" onclick="refreshAll(false)" title="Actualizar">↻</button>
+    </div>
+    <div class="subtabs">
+      <button class="subtab-btn ${facturacionSubTab==='cobrar'?'active':''}" onclick="switchFacturacionSub('cobrar')">Por Cobrar</button>
+      <button class="subtab-btn ${facturacionSubTab==='pagar'?'active':''}" onclick="switchFacturacionSub('pagar')">Por Pagar</button>
+      <button class="subtab-btn ${facturacionSubTab==='cuenta'?'active':''}" onclick="switchFacturacionSub('cuenta')">Estado de Cuenta</button>
+    </div>
+    ${facturacionSubTab==='cuenta' ? renderEstadoCuenta() :
+      isAll ? '<div class="empty-note">Elige un proyecto específico (no "Todos los proyectos") para ver el detalle de facturación.</div>' :
+      facturacionSubTab==='cobrar' ? renderPorCobrar() : renderPorPagar()}
+    <div style="text-align:center;margin-top:10px;">${syncBadge()}</div>
+  `;
+}
+function switchFacturacionSub(s){ facturacionSubTab = s; formOpen.factura=false; formOpen.anticipo=false; abonoAbierto=null; renderTab(); }
+
+/* ---------- POR COBRAR ---------- */
+function renderPorCobrar(){
+  const fs = [...facturasDe(currentProyecto)].reverse();
+  const t = totalesPorCobrar(currentProyecto);
+  const anticipos = anticiposSinAplicar(currentProyecto);
+  return `
+    <div class="actions-row" style="margin-bottom:14px;gap:8px;">
+      <button class="btn btn-copper btn-block" onclick="toggleFacturaForm()">${formOpen.factura?'✕ Cerrar':'+ Nueva factura'}</button>
+      <button class="btn btn-ghost btn-block" onclick="toggleAnticipoForm()">${formOpen.anticipo?'✕ Cerrar':'+ Anticipo sin factura'}</button>
+    </div>
+    <div class="form-panel ${formOpen.factura?'open':''}">
+      <div class="field">
+        <label>Cliente</label>
+        <select id="f-clienteId" onchange="onClienteSelectChangeFact()">
+          <option value="">— Selecciona —</option>
+          ${clientes.map(c=>`<option value="${c.id}">${escapeHtml(c.nombre)} (${c.id})</option>`).join("")}
+          <option value="__nuevo__">+ Nuevo cliente…</option>
+        </select>
+        <div id="f-cliente-nuevo-panel" style="display:${clienteFormOpenFact?'block':'none'};margin-top:8px;" class="catalog-mini">
+          <div class="field" style="margin-bottom:6px;"><input type="text" id="f-cliente-nombre-nuevo" placeholder="Nombre del cliente nuevo"></div>
+          <button class="btn btn-ghost btn-sm" onclick="crearClienteInlineFact()">Guardar cliente</button>
+        </div>
+      </div>
+      <div class="field"><label>Concepto</label><input type="text" id="f-concepto" placeholder="Ej. Avance 30% — inicio de obra"></div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de emisión</label><input type="date" id="f-fecha"></div>
+        <div class="field"><label>Monto (sin ITBMS)</label><input type="number" step="0.01" id="f-monto" placeholder="0.00" oninput="recalcFacturaPreview()"></div>
+      </div>
+      <div class="partida-info" id="f-itbms-preview">ITBMS (7%): B/. 0.00 · Total: B/. 0.00</div>
+      <div class="field"><label>N° de factura fiscal (opcional)</label><input type="text" id="f-numeroFiscal" placeholder="Para cruzar con tu talonario/factura electrónica"></div>
+      <div class="form-actions"><button class="btn btn-primary btn-block" id="f-submit-btn" onclick="submitFactura()">Guardar factura</button></div>
+    </div>
+    <div class="form-panel ${formOpen.anticipo?'open':''}">
+      <div class="footnote" style="text-align:left;margin-bottom:8px;">Para cuando el cliente ya te pagó pero todavía no facturas (ej. anticipo, y facturas el 100% al terminar). Queda guardado como "sin aplicar" hasta que lo relaciones con una factura.</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha del anticipo</label><input type="date" id="an-fecha"></div>
+        <div class="field"><label>Monto recibido</label><input type="number" step="0.01" id="an-monto" placeholder="0.00"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Método de pago</label><input type="text" id="an-metodo" placeholder="Transferencia, cheque..."></div>
+        <div class="field"><label>Referencia (opcional)</label><input type="text" id="an-referencia"></div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary btn-block" id="an-submit-btn" onclick="submitAnticipoSinFactura()">Guardar anticipo</button></div>
+    </div>
+    <div class="totals-box" style="margin-bottom:14px;">
+      <div class="tl"><span>Total facturado</span><span>${fmtMoney(t.totalFacturado)}</span></div>
+      <div class="tl"><span>Total cobrado (aplicado a facturas)</span><span>${fmtMoney(t.totalCobrado)}</span></div>
+      <div class="tl" style="font-weight:700;"><span>Saldo por cobrar</span><span>${fmtMoney(t.saldo)}</span></div>
+      ${t.totalAnticipos>0 ? `<div class="tl" style="color:var(--copper);"><span>Anticipos recibidos sin facturar</span><span>${fmtMoney(t.totalAnticipos)}</span></div>` : ''}
+    </div>
+    ${anticipos.length>0 ? `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="section-title">Anticipos sin aplicar <span class="tag">${anticipos.length}</span></div>
+      ${anticipos.map(a=>`
+        <div class="item-row">
+          <div><div class="ir-desc">${fmtMoney(a.monto)}</div><div class="ir-sub">${a.fecha||'sin fecha'}${a.metodoPago?' · '+escapeHtml(a.metodoPago):''}${a.referencia?' · '+escapeHtml(a.referencia):''}</div></div>
+          <span class="chip chip-cat">Sin factura</span>
+        </div>`).join("")}
+      <div class="footnote" style="text-align:left;margin-top:6px;">Se aplican a una factura desde el botón "Aplicar anticipo" que aparece bajo cada factura pendiente.</div>
+    </div>` : ''}
+    ${fs.length===0 ? '<div class="empty-note">Aún no hay facturas emitidas para este proyecto.</div>' :
+      fs.map(f=>{
+        const cobrado = abonosDeFactura(f.id);
+        const saldo = Number(f.total) - cobrado;
+        const estado = estadoDeSaldo(f.total, cobrado);
+        const abonosDeEsta = abonosCliente.filter(a=>String(a.facturaId)===String(f.id));
+        return `
+      <div class="record">
+        <div class="record-top">
+          <div>
+            <div class="record-title">${escapeHtml(f.concepto)}</div>
+            <div class="record-sub">${escapeHtml(f.clienteNombre||'—')} · Emitida ${f.fecha||'sin fecha'}${f.numeroFiscal?' · #'+escapeHtml(f.numeroFiscal):''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="record-total">${fmtMoney(f.total)}</div>
+            <button class="btn-del" onclick="deleteRecord('facturas','${f.id}', this)" title="Eliminar">🗑</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          <span class="chip chip-cat">Neto ${fmtMoney(f.monto)}</span>
+          <span class="chip chip-cat">ITBMS ${fmtMoney(f.itbms)}</span>
+          <span class="chip ${estado==='Pagado'?'chip-pag':estado==='Parcial'?'chip-parcial':'chip-pend'}">${estado}${cobrado>0?` · cobrado ${fmtMoney(cobrado)}`:''}</span>
+        </div>
+        ${abonosDeEsta.length>0 ? `<div class="footnote" style="text-align:left;margin-top:6px;">${abonosDeEsta.map(a=>`${a.fecha||'—'}: ${fmtMoney(a.monto)}${a.metodoPago?' ('+escapeHtml(a.metodoPago)+')':''}`).join(' · ')}</div>` : ''}
+        ${estado!=='Pagado' ? `
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+          ${abonoAbierto && abonoAbierto.tipo==='cliente' && abonoAbierto.origenId===f.id ? renderMiniAbonoCliente(f.id, saldo) :
+            `<button class="btn btn-ghost btn-sm" onclick="abrirAbonoCliente('${f.id}')">+ Registrar abono (saldo ${fmtMoney(saldo)})</button>`}
+          ${anticipos.length>0 ? `
+          <div class="field-row" style="margin-bottom:0;">
+            <select id="aplicar-anticipo-${f.id}" style="margin-bottom:0;">
+              ${anticipos.map(a=>`<option value="${a.id}">Aplicar anticipo de ${fmtMoney(a.monto)} (${a.fecha||'sin fecha'})</option>`).join("")}
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="aplicarAnticipo('aplicar-anticipo-${f.id}','${f.id}')">Aplicar</button>
+          </div>` : ''}
+        </div>` : ''}
+      </div>`;}).join("")}
+  `;
+}
+function toggleAnticipoForm(){ formOpen.anticipo = !formOpen.anticipo; renderTab(); }
+async function submitAnticipoSinFactura(){
+  if(currentProyecto==="ALL") return;
+  const monto = parseFloat(document.getElementById("an-monto").value)||0;
+  if(monto<=0){ showToast("Ingresa un monto válido"); return; }
+  const rec = {
+    id: uid(), facturaId: '', proyecto: currentProyecto,
+    fecha: document.getElementById("an-fecha").value,
+    monto, metodoPago: document.getElementById("an-metodo").value.trim(),
+    referencia: document.getElementById("an-referencia").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const btn = document.getElementById("an-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd("abonosCliente", rec);
+  if(r.ok){
+    abonosCliente.push(rec);
+    formOpen.anticipo = false;
+    showToast("Anticipo guardado — pendiente de aplicar a una factura");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar anticipo";
+    showToast("No se pudo guardar (sin conexión).");
+  }
+}
+async function aplicarAnticipo(selectId, facturaId){
+  const sel = document.getElementById(selectId);
+  const anticipoId = sel.value;
+  const anticipo = abonosCliente.find(a=>a.id===anticipoId);
+  if(!anticipo) return;
+  const rec = Object.assign({}, anticipo, { facturaId });
+  const r = await apiUpdate("abonosCliente", anticipoId, rec);
+  if(r.ok){
+    const idx = abonosCliente.findIndex(a=>a.id===anticipoId);
+    abonosCliente[idx] = rec;
+    showToast("Anticipo aplicado a la factura");
+    renderTab();
+  }else{
+    showToast("No se pudo aplicar (sin conexión).");
+  }
+}
+function toggleFacturaForm(){ formOpen.factura = !formOpen.factura; renderTab(); if(formOpen.factura) setTimeout(recalcFacturaPreview,0); }
+function onClienteSelectChangeFact(){
+  const val = document.getElementById("f-clienteId").value;
+  if(val==='__nuevo__'){
+    clienteFormOpenFact = true;
+    document.getElementById("f-cliente-nuevo-panel").style.display = 'block';
+  }
+}
+async function crearClienteInlineFact(){
+  const nombre = document.getElementById("f-cliente-nombre-nuevo").value.trim();
+  if(!nombre){ showToast("Escribe el nombre del cliente"); return; }
+  const rec = {
+    id: 'CLI-' + String(clientes.length+1).padStart(4,'0'),
+    nombre, telefono:"", correo:"", contacto:"", notas:"",
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const r = await apiAdd("clientes", rec);
+  if(r.ok){
+    clientes.push(rec);
+    clienteFormOpenFact = false;
+    showToast("Cliente creado: " + rec.id);
+    renderTab();
+    setTimeout(()=>{ const s = document.getElementById("f-clienteId"); if(s) s.value = rec.id; }, 0);
+  }else{
+    showToast("No se pudo crear el cliente (sin conexión).");
+  }
+}
+function recalcFacturaPreview(){
+  const el = document.getElementById("f-itbms-preview");
+  if(!el) return;
+  const monto = parseFloat(document.getElementById("f-monto").value)||0;
+  const itbms = monto*ITBMS_RATE;
+  el.textContent = `ITBMS (7%): ${fmtMoney(itbms)} · Total: ${fmtMoney(monto+itbms)}`;
+}
+async function submitFactura(){
+  if(currentProyecto==="ALL") return;
+  const clienteId = document.getElementById("f-clienteId").value;
+  const concepto = document.getElementById("f-concepto").value.trim();
+  const monto = parseFloat(document.getElementById("f-monto").value)||0;
+  if(!clienteId || clienteId==='__nuevo__'){ showToast("Selecciona o crea un cliente"); return; }
+  if(!concepto || monto<=0){ showToast("Completa concepto y monto"); return; }
+  const clienteObj = clientes.find(c=>c.id===clienteId);
+  const itbms = +(monto*ITBMS_RATE).toFixed(2);
+  const rec = {
+    id: uid(), proyecto: currentProyecto, clienteId, clienteNombre: clienteObj?clienteObj.nombre:'',
+    concepto, fecha: document.getElementById("f-fecha").value,
+    monto, itbms, total: +(monto+itbms).toFixed(2),
+    numeroFiscal: document.getElementById("f-numeroFiscal").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const btn = document.getElementById("f-submit-btn");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const r = await apiAdd("facturas", rec);
+  if(r.ok){
+    facturas.push(rec);
+    formOpen.factura = false;
+    showToast("Factura guardada — ITBMS causado en esta fecha");
+    renderTab();
+  }else{
+    btn.disabled = false; btn.textContent = "Guardar factura";
+    showToast("No se pudo guardar (sin conexión).");
+  }
+}
+function abrirAbonoCliente(facturaId){ abonoAbierto = { tipo:'cliente', origenId:facturaId }; renderTab(); }
+function renderMiniAbonoCliente(facturaId, saldo){
+  return `
+    <div class="catalog-mini" style="margin-top:6px;">
+      <div class="field-row" style="margin-bottom:6px;">
+        <div class="field" style="margin-bottom:0;"><input type="date" id="ac-fecha"></div>
+        <div class="field" style="margin-bottom:0;"><input type="number" step="0.01" id="ac-monto" placeholder="Monto (saldo ${fmtMoney(saldo)})"></div>
+      </div>
+      <div class="field-row" style="margin-bottom:6px;">
+        <div class="field" style="margin-bottom:0;"><input type="text" id="ac-metodo" placeholder="Método (transferencia, cheque...)"></div>
+        <div class="field" style="margin-bottom:0;"><input type="text" id="ac-referencia" placeholder="Referencia (opcional)"></div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-verde btn-sm" onclick="submitAbonoCliente('${facturaId}')">Guardar abono</button>
+        <button class="btn btn-ghost btn-sm" onclick="cerrarAbono()">Cancelar</button>
+      </div>
+    </div>`;
+}
+async function submitAbonoCliente(facturaId){
+  const monto = parseFloat(document.getElementById("ac-monto").value)||0;
+  if(monto<=0){ showToast("Ingresa un monto válido"); return; }
+  const rec = {
+    id: uid(), facturaId, proyecto: currentProyecto,
+    fecha: document.getElementById("ac-fecha").value,
+    monto, metodoPago: document.getElementById("ac-metodo").value.trim(),
+    referencia: document.getElementById("ac-referencia").value.trim(),
+    registradoPor: userName, timestamp: new Date().toISOString()
+  };
+  const r = await apiAdd("abonosCliente", rec);
+  if(r.ok){
+    abonosCliente.push(rec);
+    abonoAbierto = null;
+    showToast("Abono registrado");
+    renderTab();
+  }else{
+    showToast("No se pudo guardar (sin conexión).");
+  }
+}
+
+/* ---------- POR PAGAR ---------- */
+function renderPorPagar(){
+  const cs = compras.filter(c=>matchesProyecto(c,currentProyecto));
+  const ms = manoObra.filter(m=>matchesProyecto(m,currentProyecto));
+  const t = totalesPorPagar(currentProyecto);
+  const items = [
+    ...cs.map(c=>({tipo:'compras', id:c.id, nombre:c.proveedor||'Proveedor', desc:c.descripcion, fecha:c.fecha, total:c.total})),
+    ...ms.map(m=>({tipo:'mano_obra', id:m.id, nombre:m.tecnico||'Cuadrilla', desc:(m.descripcionTrabajo || (m.tipoMano==='Subcontratista'?'Mano de obra subcontratada (con factura)':m.tipoMano==='SubcontratistaSinFactura'?'Mano de obra subcontratada (sin factura)':'Mano de obra')), fecha:m.fecha, total:m.total}))
+  ].sort((a,b)=> (b.fecha||'').localeCompare(a.fecha||''));
+  return `
+    ${renderProveedoresPanel()}
+    <div class="footnote" style="text-align:left;margin-bottom:12px;">Cada compra y cada registro de mano de obra subcontratada funciona como una "factura de proveedor" — regístrale abonos aquí o desde su propia pestaña (Compras / M. Obra); el saldo se ve igual en ambos lados.</div>
+    <div class="totals-box" style="margin-bottom:14px;">
+      <div class="tl"><span>Total facturado por proveedores</span><span>${fmtMoney(t.totalFacturas)}</span></div>
+      <div class="tl"><span>Total pagado</span><span>${fmtMoney(t.totalAbonado)}</span></div>
+      <div class="tl" style="font-weight:700;"><span>Saldo por pagar</span><span>${fmtMoney(t.saldo)}</span></div>
+    </div>
+    ${items.length===0 ? '<div class="empty-note">Aún no hay compras ni mano de obra registradas para este proyecto.</div>' :
+      items.map(it=>{
+        const abonado = abonosDeOrigen(it.tipo, it.id);
+        const saldo = Number(it.total) - abonado;
+        const estado = estadoDeSaldo(it.total, abonado);
+        return `
+      <div class="record">
+        <div class="record-top">
+          <div><div class="record-title">${escapeHtml(it.nombre)}</div><div class="record-sub">${escapeHtml(it.desc||'')} · ${it.fecha||'sin fecha'}</div></div>
+          <div class="record-total">${fmtMoney(it.total)}</div>
+        </div>
+        <div class="record-meta">
+          <span class="chip chip-cat">${it.tipo==='compras'?'Compra':'Mano de obra'}</span>
+          <span class="chip ${estado==='Pagado'?'chip-pag':estado==='Parcial'?'chip-parcial':'chip-pend'}">${estado}${abonado>0?` · pagado ${fmtMoney(abonado)}`:''}</span>
+        </div>
+        ${estado!=='Pagado' ? `
+        <div style="margin-top:8px;">
+          ${abonoAbierto && abonoAbierto.tipo==='proveedor' && abonoAbierto.origenId===it.id ? renderMiniAbonoProveedor(it.tipo, it.id, it.nombre, saldo) :
+            `<button class="btn btn-ghost btn-sm" onclick="abrirAbonoProveedor('${it.tipo}','${it.id}')">+ Registrar abono (saldo ${fmtMoney(saldo)})</button>`}
+        </div>` : ''}
+      </div>`;}).join("")}
+  `;
+}
+
+/* =========================================================
+   RENDER: PARTIDAS (catálogo)
+   ========================================================= */
+function renderPartidas(){
+  const isAll = currentProyecto === "ALL";
+  let parts;
+  if(isAll){
+    parts = [];
+    proyectos.forEach(p=>{
+      computePartidas(p.id).forEach(pt=> parts.push({...pt, proyectoKey:p.id, proyectoNombre:p.nombre}));
+    });
+  }else{
+    parts = computePartidas(currentProyecto);
+  }
+  parts = parts.filter(p=>{
+    if(!searchPartida) return true;
+    const q = searchPartida.toLowerCase();
+    return p.id.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.categoria.toLowerCase().includes(q);
+  }).sort((a,b)=> b.pct - a.pct);
+  return `
+    <div class="list-head"><h2>Catálogo de Partidas</h2><span class="chip chip-cat">${parts.length} total</span></div>
+    <div class="search-box">
+      <input type="text" placeholder="Buscar por ID, descripción o categoría…" value="${escapeHtml(searchPartida)}" oninput="searchPartida=this.value; renderTab();" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;">
+    </div>
+    ${parts.length===0 ? '<div class="empty-note">Este proyecto aún no tiene partidas (o no coinciden con tu búsqueda).</div>' : parts.map(p=>`
+      <div class="partida-card">
+        <div class="pt-top">
+          <div>
+            <div class="pt-id">${p.id} <span class="semaforo sem-${p.semaforo}" style="display:inline-block;margin-left:4px;"></span> ${isAll?`<span class="proyecto-tag">${escapeHtml(p.proyectoNombre||p.proyectoKey)}</span>`:''}</div>
+            <div class="pt-desc">${escapeHtml(p.desc)} · Nv.${p.nivel}</div>
+          </div>
+          <div class="record-total">${fmtPct(p.pct)}</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.min(p.pct*100,100)}%;background:var(--${p.semaforo});"></div></div>
+        <div class="pt-figures">
+          <span>Presup. ${fmtMoney(p.totalPresup)}</span>
+          <span>Gastado ${fmtMoney(p.gastado)}</span>
+          <span>Venta ${fmtMoney(p.totalVenta)}</span>
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
+
+init();
+</script>
+</body>
+</html>
